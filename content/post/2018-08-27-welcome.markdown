@@ -10,6 +10,8 @@ tags:
   
 ---
 
-# A new site!
+# Welcome to my website!
 
+I will be using the site to blog about data science and visualisation projects I am working on.
 
+More updates coming soon, thank you for visitting, check back soon!
