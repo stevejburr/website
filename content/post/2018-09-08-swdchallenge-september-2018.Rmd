@@ -9,6 +9,7 @@ categories:
   - R
   - ggplot2
 tags: []
+draft: false
 ---
 
 This was the second time that I've taken part in the #SWDchallenge.
