@@ -1,0 +1,52 @@
+---
+draft: yes
+title: '#SWDchallenge - September 2018'
+author: Steve Burr
+date: '2018-09-08'
+slug: swdchallenge-september-2018
+categories:
+  - '#SWDchallenge'
+  - DataViz
+  - R
+  - ggplot2
+tags: []
+---
+
+
+
+<p>This was the second time that I’ve taken part in the #SWDchallenge.</p>
+<p>Full details of the challenge can be seen <a href="http://www.storytellingwithdata.com/blog/2018/8/24/swdchallenge-how-would-you-makeover-this-graph">here</a>.</p>
+<p>The summary is that the goal is to remake this pie chart into something better.</p>
+<div class="figure">
+<img src="/post/2018-09-08-swdchallenge-september-2018_files/makeover+challenge.png" />
+
+</div>
+<hr />
+<div id="what-are-some-of-the-challenges-with-this-original-representation-of-the-data" class="section level3">
+<h3>What are some of the challenges with this original representation of the data?</h3>
+<ol style="list-style-type: decimal">
+<li>The dark blue heading for the title is the same colour as “Europe” but it talks about “APAC”.</li>
+<li>Though it’s fairly obvious, the title uses the term “APAC” but this doesn’t match the wording in the visualisation.</li>
+<li>You have to do a lot of glancing back and forth between two sides of the screen to make the comparisons.</li>
+<li>It’s hard to compare the relative sizes of segments of a pie chart.</li>
+</ol>
+<hr />
+</div>
+<div id="what-did-i-do" class="section level3">
+<h3>What did I do?</h3>
+<p>There’s not a great deal of data to work with here, and there’s also not a lot of background information. So rather than try and invent my own context for the chart, I’ve taken the original finding of the chart at facevalue. Therefore, I’m going to be trying to make the original point a bit clearer with my approach.</p>
+<ul>
+<li>I’ve chosen to use a slope chart to show the data. Much to my colleagues’ annoyance, I think these are really great ways of showing this sort of data. It makes a clear point of the change in rankings, and shows which changes have been significant and which haven’t.</li>
+<li>I’ve only used a single colour, this is used to highlight the key story which is the increase for “Asia Pacific” in both the title and the visualisation.</li>
+<li>I’ve used consistent naming across the whole of the piece to reduce confusion.</li>
+</ul>
+<div class="figure">
+<img src="/post/2018-09-08-swdchallenge-september-2018_files/plot.png" />
+
+</div>
+<p>I’m not entirely clear on quite what this data really means, and so while I’ve tried to make the commentary a little more actionable there is probably a lot more that could be done here by someone with the full context.</p>
+<hr />
+<p>This visualisation was produced in R using ggplot2. The full code can be found on <a href="https://github.com/stevejburr/stwdchallenge">github</a>.</p>
+<p>I was pleased with how quickly / easily I could produce most of what I wanted using ggplot2 on this occasion. I didn’t need to look up much at all, so all the practice with #MakeoverMonday and #TidyTuesday is definitely paying off. The final step of trying to get the titles to be in the right place and coloured correctly did take a while and a bit of googling. I like having everything done through R, but I can definitely see why it’s common to combine it with Illustrator for these sorts of final tweaks.</p>
+<p>If you’d like to chat about this work - then find me on <a href="https://www.twitter.com/stevejburr">twitter</a></p>
+</div>
