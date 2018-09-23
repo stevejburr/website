@@ -1,0 +1,118 @@
+---
+title: The danger of stacked area charts
+author: Steve Burr
+date: '2018-09-23'
+slug: stacked-area-charts
+categories:
+  - DataViz
+  - R
+  - ggplot2
+tags: []
+draft: false
+---
+
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="/rmarkdown-libs/d3/d3.min.js"></script>
+<link href="/rmarkdown-libs/colorbrewer/colorbrewer.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/colorbrewer/colorbrewer.js"></script>
+<link href="/rmarkdown-libs/streamgraph/streamgraph.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/streamgraph-binding/streamgraph.js"></script>
+
+
+<p>Earlier in the week, I saw an interesting tweet which reminded me just how important the ordering of a stacked area chart is, and how hard they can be to interpret:</p>
+{{% tweet "1042950396761833474" %}}
+<p>Because all layers build on previous ones, you can only easily understand the area of the bottom level which has a common baseline. The Economist have put Sub-Saharan Africa at the bottom to make the relative change much clearer (extreme poverty has fallen in every other region).</p>
+<p>A few of the replies to the original tweet seemed to imply that one or other of these charts was using some sort of trickery to make a specific point, which I don’t think is an entirely fair comment to make. There’s no such thing as an “objective” visualisation, design choices make a difference to how the data is perceived and there’s nothing wrong with shaping the visual to make a particular interpretation more clear.</p>
+<p>But this did get me thinking about how else this data could be displayed, so I downloaded the dataset and tried out a few approaches.</p>
+<p>The original data is from the World Bank, and can be downloaded as a .csv <a href="http://iresearch.worldbank.org/PovcalNet/povDuplicateWB.aspx">here</a>.</p>
+<p>This code reads in the data downloaded from the website and then does a small amount of manipulation to get the data ready to use in subsequent steps:</p>
+<pre class="r"><code>library(tidyverse)
+library(streamgraph)
+library(gridExtra)
+
+data &lt;- read_csv(&quot;RegionalTable_1.9.csv&quot;)
+
+
+data %&gt;% filter(!(regionTitle %in% c(&quot;World Total&quot;,&quot;World less Other High Income&quot;))) %&gt;%
+  transmute(Year=requestYear,
+            Region=regionTitle,
+            `Number in Extreme Poverty / millions`=hc*population) -&gt; data</code></pre>
+<p>This code then produces two rough stacked area charts using ggplot2 - I kept with the default colours for speed, and because they work equally well for both lines and areas (most of the ColorBrewer pallettes don’t work well for lines):</p>
+<pre class="r"><code>data %&gt;% ggplot() +
+  geom_area(aes(x=Year,y=`Number in Extreme Poverty / millions`,fill=Region),position = position_stack(reverse = TRUE)) +
+  theme_minimal() +
+  theme(text=element_text(colour=&quot;grey50&quot;),
+        axis.text = element_text(colour=&quot;grey50&quot;),
+        axis.title= element_text(colour=&quot;grey50&quot;,size=8),
+        panel.grid= element_blank()) -&gt; plot1
+ 
+
+data %&gt;% ggplot() +
+  geom_area(aes(x=Year,y=`Number in Extreme Poverty / millions`,fill=Region),position = position_stack(reverse = FALSE))  +
+  theme_minimal() +
+  theme(text=element_text(colour=&quot;grey50&quot;),
+        axis.text = element_text(colour=&quot;grey50&quot;),
+        axis.title= element_text(colour=&quot;grey50&quot;,size=8),
+        panel.grid= element_blank()) -&gt; plot2
+
+grid.arrange(plot1,plot2,nrow=2)</code></pre>
+<p><img src="/post/2018-09-23-stacked-area-charts_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>The order of these don’t exactly match the two from twitter, but they do show the impact of having Sub-Saharan Africa at the top and the bottom of the stack respectively.</p>
+<p>When I read the first graph, I get a feeling that the number of people in poverty in Sub-Saharan Africa has gone down as a result of the falling baseline. In the second version, the constant zero baseline makes it clear that in fact this has increased while all other regions have fallen. The first layout makes it hard to naturally come to the right conclusion, and this sensitivity to stack order presents a challenge - Should I make one plot for each possible order? Which order is best? Is one “fairer” than the others?</p>
+<p>Even though I know it’s the same data, just stacked in two different ways, the patterns which jump out of the visualisations are very different. As the point of a visualisation is to use our visual perception to understand data, this is very important.</p>
+<p>Both of these representations make it clear that the overall number of people in poverty has fallen over time. One alternative way of showing the data which makes the changes of individual regions easier to see, but makes it harder to see the total is a simple line graph:</p>
+<pre class="r"><code>data %&gt;% ggplot() +
+  geom_line(aes(x=Year,y=`Number in Extreme Poverty / millions`,col=Region),size=1.1)  +
+  theme_minimal() +
+  theme(text=element_text(colour=&quot;grey50&quot;),
+        axis.text = element_text(colour=&quot;grey50&quot;),
+        axis.title= element_text(colour=&quot;grey50&quot;),
+        panel.grid= element_blank())</code></pre>
+<p><img src="/post/2018-09-23-stacked-area-charts_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>I personally nearly always prefer this approach, it’s rare that I feel that explicitly showing the part to whole relationship justifies the increased difficulty in interpretation which stacking causes.</p>
+<p>If the total is also important, then you can either include it as an additional line, or as a smaller additional plot. Including a total line can make it hard to see the changes in smaller series, and it will impact on the interpetation of other lines due to the extended scale. However, in this example, I don’t think it’s detrimental to add a total.</p>
+<pre class="r"><code>data %&gt;% group_by(Year) %&gt;% 
+  summarise(`Number in Extreme Poverty / millions`=sum(`Number in Extreme Poverty / millions`)) -&gt; total
+  
+data %&gt;% ggplot() +
+  geom_line(aes(x=Year,y=`Number in Extreme Poverty / millions`,col=Region),size=1.1)  +
+  geom_line(data=total,aes(x=Year,y=`Number in Extreme Poverty / millions`),size=1.1,colour=&quot;grey50&quot;)+
+  annotate(&quot;text&quot;,x=1980,y=1960,label=&quot;Total - all regions&quot;,hjust=0,col=&quot;grey50&quot;) +
+  theme_minimal() +
+  theme(text=element_text(colour=&quot;grey50&quot;),
+        axis.text = element_text(colour=&quot;grey50&quot;),
+        axis.title= element_text(colour=&quot;grey50&quot;),
+        panel.grid= element_blank())</code></pre>
+<p><img src="/post/2018-09-23-stacked-area-charts_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>When the plot can be made interactive, then a “streamgraph” type layout can be used. I’m writing a longer post just focussing on streamgraphs which I hope to publish soon - but the general idea is that you can make it easier to interpret the relative size of stacked areas by having a non-zero baseline. The streamgraph layout selects a baseline so that the slope of the all the layers is minimised, this puts all the layers on a more even footing when comparing them.</p>
+<p>This easier interpetation of changes isn’t without cost, the downside is that without a zero baseline it’s much harder to interpet the absolute value of a given area, and you can’t just look at the top of the stack to get a total. Tooltips which appear when the mouse is hovered over a specific point on the graph can help in this regard, but again it’s a trade off, something is made easier at the cost of making something else harder.</p>
+<p>A paper which goes into more detail on different ways of stacking areas can be found <a href="http://leebyron.com/streamgraph/">here</a>.</p>
+<pre class="r"><code>data %&gt;% mutate(value=`Number in Extreme Poverty / millions`,
+                Region=as.factor(Region)) %&gt;%
+  streamgraph(&quot;Region&quot;,&quot;value&quot;,&quot;Year&quot;,offset=&quot;wiggle&quot;,interpolate=&quot;linear&quot;)</code></pre>
+<div id="htmlwidget-1" class="streamgraph html-widget" style="width:672px;height:480px;"></div>
+<div id="htmlwidget-10b65f1f0e64ecace7f8-legend" style="width:672" class="streamgraph html-widget-legend"><center><label style='padding-right:5px' for='htmlwidget-10b65f1f0e64ecace7f8-select'></label><select id='htmlwidget-10b65f1f0e64ecace7f8-select' style='visibility:hidden;'></select></center></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"data":{"key":["East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa","East Asia and Pacific","Europe and Central Asia","Latin America and the Caribbean","Middle East and North Africa","Other high Income","South Asia","Sub-Saharan Africa"],"value":[1115.64266688422,13.22835854175,47.8121623321134,20.073034768768,5.17278344352766,512.327014085221,194.165675520415,1021.89678478985,12.3593371473968,62.467492964432,18.6765606093381,4.84479135674965,522.285617017441,225.967533960607,906.641862623107,11.717927485321,53.4399875489295,18.9369635531336,4.50337124278866,530.42169745409,253.215441966361,987.051667175469,13.2796622886375,62.5667596142589,14.1754584149074,4.32439610068771,535.90908780552,277.512478752359,902.016548903433,23.3677294382903,61.2749554012762,16.5511199899571,4.87654511943311,542.129108790266,327.320992806052,712.87691564567,33.7899371463677,67.6976812539447,15.2924199520811,4.85569298929554,517.990352238601,350.684627566831,695.925354390442,36.749315308417,69.744767770614,10.5873456026596,5.02621742303867,534.373637950355,376.147266174946,552.499464889424,27.5986958021525,63.249297098403,9.4197947239235,4.85780742946296,554.25737177199,398.005260501107,361.629388555903,22.8963845325826,54.9081578586592,9.40230208581944,5.31384940253582,510.35534558807,387.686705317283,292.781060458963,13.2801417496487,39.8781203592226,8.77738810719128,5.08013215798501,467.01293364382,396.419923246632,220.635667323165,11.406524270464,35.5883137135378,7.85201760803736,5.82419314051323,400.833414336,408.499485645544,169.587354303018,9.84705842504713,33.7843042684185,9.22479491671534,6.15063394086787,327.993488917298,406.422409049978,144.566265856691,8.9399301040179,28.6102000025042,9.41843099791775,6.0915598658933,304.727664749718,406.050380467509,73.1410948370054,7.67281578005226,27.9809360199999,9.4514976775215,6.3941100003324,274.489586463511,405.100663077013,47.1799867545725,7.1472836979206,25.900526376091,18.6357019688493,7.31766605490865,216.428426763051,413.251387389888],"date":["1981-01-01","1981-01-01","1981-01-01","1981-01-01","1981-01-01","1981-01-01","1981-01-01","1984-01-01","1984-01-01","1984-01-01","1984-01-01","1984-01-01","1984-01-01","1984-01-01","1987-01-01","1987-01-01","1987-01-01","1987-01-01","1987-01-01","1987-01-01","1987-01-01","1990-01-01","1990-01-01","1990-01-01","1990-01-01","1990-01-01","1990-01-01","1990-01-01","1993-01-01","1993-01-01","1993-01-01","1993-01-01","1993-01-01","1993-01-01","1993-01-01","1996-01-01","1996-01-01","1996-01-01","1996-01-01","1996-01-01","1996-01-01","1996-01-01","1999-01-01","1999-01-01","1999-01-01","1999-01-01","1999-01-01","1999-01-01","1999-01-01","2002-01-01","2002-01-01","2002-01-01","2002-01-01","2002-01-01","2002-01-01","2002-01-01","2005-01-01","2005-01-01","2005-01-01","2005-01-01","2005-01-01","2005-01-01","2005-01-01","2008-01-01","2008-01-01","2008-01-01","2008-01-01","2008-01-01","2008-01-01","2008-01-01","2010-01-01","2010-01-01","2010-01-01","2010-01-01","2010-01-01","2010-01-01","2010-01-01","2011-01-01","2011-01-01","2011-01-01","2011-01-01","2011-01-01","2011-01-01","2011-01-01","2012-01-01","2012-01-01","2012-01-01","2012-01-01","2012-01-01","2012-01-01","2012-01-01","2013-01-01","2013-01-01","2013-01-01","2013-01-01","2013-01-01","2013-01-01","2013-01-01","2015-01-01","2015-01-01","2015-01-01","2015-01-01","2015-01-01","2015-01-01","2015-01-01"]},"markers":null,"annotations":null,"offset":"wiggle","interactive":true,"interpolate":"linear","palette":"Spectral","text":"black","tooltip":"black","x_tick_interval":10,"x_tick_units":"year","x_tick_format":"%Y","y_tick_count":5,"y_tick_format":",g","top":20,"right":40,"bottom":30,"left":50,"legend":false,"legend_label":"","fill":"brewer","label_col":"black","x_scale":"date"},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code>data %&gt;% mutate(value=`Number in Extreme Poverty / millions`,
+                Region=as.factor(Region),
+                Region=factor(Region, levels=rev(levels(Region)))) %&gt;%
+  streamgraph(&quot;Region&quot;,&quot;value&quot;,&quot;Year&quot;,offset=&quot;wiggle&quot;,interpolate=&quot;linear&quot;)</code></pre>
+<div id="htmlwidget-2" class="streamgraph html-widget" style="width:672px;height:480px;"></div>
+<div id="htmlwidget-c1117e1a41e3022ef73b-legend" style="width:672" class="streamgraph html-widget-legend"><center><label style='padding-right:5px' for='htmlwidget-c1117e1a41e3022ef73b-select'></label><select id='htmlwidget-c1117e1a41e3022ef73b-select' style='visibility:hidden;'></select></center></div>
+<script type="application/json" data-for="htmlwidget-2">{"x":{"data":{"key":["Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific","Sub-Saharan Africa","South Asia","Other high Income","Middle East and North Africa","Latin America and the Caribbean","Europe and Central Asia","East Asia and Pacific"],"value":[194.165675520415,512.327014085221,5.17278344352766,20.073034768768,47.8121623321134,13.22835854175,1115.64266688422,225.967533960607,522.285617017441,4.84479135674965,18.6765606093381,62.467492964432,12.3593371473968,1021.89678478985,253.215441966361,530.42169745409,4.50337124278866,18.9369635531336,53.4399875489295,11.717927485321,906.641862623107,277.512478752359,535.90908780552,4.32439610068771,14.1754584149074,62.5667596142589,13.2796622886375,987.051667175469,327.320992806052,542.129108790266,4.87654511943311,16.5511199899571,61.2749554012762,23.3677294382903,902.016548903433,350.684627566831,517.990352238601,4.85569298929554,15.2924199520811,67.6976812539447,33.7899371463677,712.87691564567,376.147266174946,534.373637950355,5.02621742303867,10.5873456026596,69.744767770614,36.749315308417,695.925354390442,398.005260501107,554.25737177199,4.85780742946296,9.4197947239235,63.249297098403,27.5986958021525,552.499464889424,387.686705317283,510.35534558807,5.31384940253582,9.40230208581944,54.9081578586592,22.8963845325826,361.629388555903,396.419923246632,467.01293364382,5.08013215798501,8.77738810719128,39.8781203592226,13.2801417496487,292.781060458963,408.499485645544,400.833414336,5.82419314051323,7.85201760803736,35.5883137135378,11.406524270464,220.635667323165,406.422409049978,327.993488917298,6.15063394086787,9.22479491671534,33.7843042684185,9.84705842504713,169.587354303018,406.050380467509,304.727664749718,6.0915598658933,9.41843099791775,28.6102000025042,8.9399301040179,144.566265856691,405.100663077013,274.489586463511,6.3941100003324,9.4514976775215,27.9809360199999,7.67281578005226,73.1410948370054,413.251387389888,216.428426763051,7.31766605490865,18.6357019688493,25.900526376091,7.1472836979206,47.1799867545725],"date":["1981-01-01","1981-01-01","1981-01-01","1981-01-01","1981-01-01","1981-01-01","1981-01-01","1984-01-01","1984-01-01","1984-01-01","1984-01-01","1984-01-01","1984-01-01","1984-01-01","1987-01-01","1987-01-01","1987-01-01","1987-01-01","1987-01-01","1987-01-01","1987-01-01","1990-01-01","1990-01-01","1990-01-01","1990-01-01","1990-01-01","1990-01-01","1990-01-01","1993-01-01","1993-01-01","1993-01-01","1993-01-01","1993-01-01","1993-01-01","1993-01-01","1996-01-01","1996-01-01","1996-01-01","1996-01-01","1996-01-01","1996-01-01","1996-01-01","1999-01-01","1999-01-01","1999-01-01","1999-01-01","1999-01-01","1999-01-01","1999-01-01","2002-01-01","2002-01-01","2002-01-01","2002-01-01","2002-01-01","2002-01-01","2002-01-01","2005-01-01","2005-01-01","2005-01-01","2005-01-01","2005-01-01","2005-01-01","2005-01-01","2008-01-01","2008-01-01","2008-01-01","2008-01-01","2008-01-01","2008-01-01","2008-01-01","2010-01-01","2010-01-01","2010-01-01","2010-01-01","2010-01-01","2010-01-01","2010-01-01","2011-01-01","2011-01-01","2011-01-01","2011-01-01","2011-01-01","2011-01-01","2011-01-01","2012-01-01","2012-01-01","2012-01-01","2012-01-01","2012-01-01","2012-01-01","2012-01-01","2013-01-01","2013-01-01","2013-01-01","2013-01-01","2013-01-01","2013-01-01","2013-01-01","2015-01-01","2015-01-01","2015-01-01","2015-01-01","2015-01-01","2015-01-01","2015-01-01"]},"markers":null,"annotations":null,"offset":"wiggle","interactive":true,"interpolate":"linear","palette":"Spectral","text":"black","tooltip":"black","x_tick_interval":10,"x_tick_units":"year","x_tick_format":"%Y","y_tick_count":5,"y_tick_format":",g","top":20,"right":40,"bottom":30,"left":50,"legend":false,"legend_label":"","fill":"brewer","label_col":"black","x_scale":"date"},"evals":[],"jsHooks":[]}</script>
+<p>When using the streamgraph approach, I don’t get a qualitively different feel when I switch the ordering, which does make it feel somewhat more objective as a way of displaying the data. However, this isn’t really a classic use case for a streamgraph. Streamgraphs really shine when there are a lot of categories which appear / disappear overtime, the original use case looked at the box office performance of individual movies over time, where the interactive tooltips become increasingly vital.</p>
+<p><strong>So what’s the right answer?</strong></p>
+<p>The best approach really depends on what you want your audience to take away from the chart.</p>
+<ul>
+<li>If I wanted a fair comparison between all the different regions over time, then I’d use the line chart of the individual regions.</li>
+<li>If I wanted to show the total number of people in poverty, and clearly highlight one region then I’d use a stacked area chart with that region on the bottom. Due to the difficulty in interpretting other areas, I’d also be tempted to only show the region of interest and group everything else into “all others” as Quartz did with their version:</li>
+</ul>
+<div class="figure">
+<img src="/post/2018-09-23-stacked-area-charts_files/Quartz.jpg" />
+
+</div>
+<ul>
+<li>I think it’s hard to effectively show both the changes in individual lines and their contribution to a total. If I needed to do this then I’d probably prefer to split it into two graphs, one showing the total and one showing the regions. However, adding a total line as I did above might also work well in some cases.</li>
+</ul>
+<p>Having multiple categories stacked on top of each other always runs the risk of making the visualisation hard to interpet, so I usually try to avoid it if possible.</p>
+<p>Thanks a lot for getting this far, if you’d like to discuss this post with me, then get in touch via <a href="http://www.twitter.com/stevejburr">Twitter</a>.</p>
