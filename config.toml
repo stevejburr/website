@@ -2,7 +2,7 @@ baseURL = "/"
 languageCode = "en-us"
 title = "Steve Burr"
 theme = "minimal"
-disqusShortname = "" # delete this to disable disqus comments
+disqusShortname = "stevejburr" # delete this to disable disqus comments
 googleAnalytics = ""
 
 [params]
