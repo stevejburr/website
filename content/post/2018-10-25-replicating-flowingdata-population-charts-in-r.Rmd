@@ -18,11 +18,16 @@ Nathan Yau recently produced a number of really nice looking visualisations of p
 
 ![](/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/male-female-bivariate.gif)
 
+<<<<<<< HEAD
 
 Note, I'm mostly interested in the visual aspect and may not get around to working out which specific font he used. I'm also going to be writing this post as a live / stream of conciousness / working document with minimal editting so there may or may not end up being dead ends, hopefully this is still useful.
 
 
 
+=======
+Note, I'm mostly interested in the visual aspect and may not get around to working out which specific font he used. I'm also going to be writing this post as a live / stream of conciousness / working document with minimal editting so there may or may not end up being dead ends, hopefully this is still useful.
+
+>>>>>>> af2ebbb6bcddc3e5749e5f7d8f1f26e5860eadce
 #### Step 1 - Get the data
 
 Nathan helpfully links to the CDC for access to the projections, I ended up getting my data from [this specific link](https://wonder.cdc.gov/population-projections-2014-2060.html). This tool enables you to download a text file of the data. This file is relatively small, but also has a load of meta data / notes in the footer, to make my life easier I just deleted this information before trying to use it in R but it would be better to deal with this programmatically.
@@ -60,8 +65,11 @@ women <- "#3ba0a7"
 colours <- c(men,women)
 ```
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> af2ebbb6bcddc3e5749e5f7d8f1f26e5860eadce
 #### Step 2 - Build a basic plot for a single year
 
 Before worrying about the animation, let's start with a single year of data, gganimate plays nicely with ggplot2 so the final stage should be simple once this is done.
