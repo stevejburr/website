@@ -18,9 +18,7 @@ Nathan Yau recently produced a number of really nice looking visualisations of p
 
 ![](/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/male-female-bivariate.gif)
 
-
 Note, I'm mostly interested in the visual aspect and may not get around to working out which specific font he used. I'm also going to be writing this post as a live / stream of conciousness / working document with minimal editting so there may or may not end up being dead ends, hopefully this is still useful.
-
 
 
 #### Step 1 - Get the data
@@ -59,7 +57,6 @@ men <- "#ec6047"
 women <- "#3ba0a7"
 colours <- c(men,women)
 ```
-
 
 
 #### Step 2 - Build a basic plot for a single year
