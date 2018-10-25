@@ -1,0 +1,508 @@
+---
+title: "Replicating Flowingdata Population Charts in R"
+author: "Steve Burr"
+date: '2018-10-25'
+output:
+  html_document:
+    df_print: paged
+slug: replicating-flowingdata-population-charts-in-r
+tags: []
+categories:
+- R
+- ggplot2
+- DataViz
+---
+
+
+
+<p>Nathan Yau recently produced a number of really nice looking visualisations of population data as part of an article entitled <a href="https://flowingdata.com/2018/10/17/ask-the-question-visualize-the-answer/">“Ask the Question, Visualize the Answer”</a>. We talked about these at work and wondered how exactly he made them. In this post, I’m going to try and work through replicating his work for one of the visualisations in particular, this animated difference plot:</p>
+<div class="figure">
+<img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/male-female-bivariate.gif" />
+
+</div>
+<p>Note, I’m mostly interested in the visual aspect and may not get around to working out which specific font he used. I’m also going to be writing this post as a live / stream of conciousness / working document with minimal editting so there may or may not end up being dead ends, hopefully this is still useful.</p>
+<div id="step-1---get-the-data" class="section level4">
+<h4>Step 1 - Get the data</h4>
+<p>Nathan helpfully links to the CDC for access to the projections, I ended up getting my data from <a href="https://wonder.cdc.gov/population-projections-2014-2060.html">this specific link</a>. This tool enables you to download a text file of the data. This file is relatively small, but also has a load of meta data / notes in the footer, to make my life easier I just deleted this information before trying to use it in R but it would be better to deal with this programmatically.</p>
+<p>Load the required packages:</p>
+<pre class="r"><code>library(tidyverse)
+library(gganimate)</code></pre>
+<p>Then let’s read in the data:</p>
+<pre class="r"><code>#Read in the data
+data &lt;- read_tsv(&quot;National Population Projections 2014-2060.txt&quot;)
+
+#View the first few records:
+head(data)</code></pre>
+<pre><code>## # A tibble: 6 x 8
+##   Notes  Year `Year Code` Age   `Age Code` Gender `Gender Code`
+##   &lt;chr&gt; &lt;int&gt;       &lt;int&gt; &lt;chr&gt; &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;        
+## 1 &lt;NA&gt;   2014        2014 &lt; 1 ~ 0          Female F            
+## 2 &lt;NA&gt;   2014        2014 &lt; 1 ~ 0          Male   M            
+## 3 &lt;NA&gt;   2014        2014 1 ye~ 1          Female F            
+## 4 &lt;NA&gt;   2014        2014 1 ye~ 1          Male   M            
+## 5 &lt;NA&gt;   2014        2014 2 ye~ 2          Female F            
+## 6 &lt;NA&gt;   2014        2014 2 ye~ 2          Male   M            
+## # ... with 1 more variable: `Projected Populations` &lt;int&gt;</code></pre>
+<pre class="r"><code>#Keep only the required columns
+data %&gt;% filter(is.na(Notes)) %&gt;% select(`Age Code`, Gender, Year, `Projected Populations`) -&gt; data
+
+#Check this has worked
+head(data)</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   `Age Code` Gender  Year `Projected Populations`
+##   &lt;chr&gt;      &lt;chr&gt;  &lt;int&gt;                   &lt;int&gt;
+## 1 0          Female  2014                 1939928
+## 2 0          Male    2014                 2031919
+## 3 1          Female  2014                 1933019
+## 4 1          Male    2014                 2024845
+## 5 2          Female  2014                 1941924
+## 6 2          Male    2014                 2030157</code></pre>
+<p>We’ll also need the specific colours which Nathan used - I’ve grabbed these using the colour picker tool in paint which hopefully does the job well enough.</p>
+<pre class="r"><code>men &lt;- &quot;#ec6047&quot;
+women &lt;- &quot;#3ba0a7&quot;
+colours &lt;- c(men,women)</code></pre>
+</div>
+<div id="step-2---build-a-basic-plot-for-a-single-year" class="section level4">
+<h4>Step 2 - Build a basic plot for a single year</h4>
+<p>Before worrying about the animation, let’s start with a single year of data, gganimate plays nicely with ggplot2 so the final stage should be simple once this is done.</p>
+<p>Looking at the plot, it looks like we’re going to need to use geom_ribbon for the bulk of the visualisation, which requires an upper/lower bound for the area to be drawn. This means that the data will need a bit of reformatting - first we need to transpose the data so we have a column for Male and Female with a single row for year. Then we will need a column for the highest/lowest value and a further column to flag up which value is highest.</p>
+<p>This is probably easier to explain via code:</p>
+<pre class="r"><code>data %&gt;% group_by(Year, `Age Code`) %&gt;% 
+  spread(key=Gender, value=`Projected Populations`) %&gt;% #transposition 
+  mutate(Upper=max(Female,Male),
+         Lower=min(Female,Male),
+         UpperGender = if_else(Upper==Male,&quot;Male&quot;,&quot;Female&quot;),
+         LowerGender = if_else(Lower==Male,&quot;Male&quot;,&quot;Female&quot;)) -&gt; chartData
+
+head(chartData)</code></pre>
+<pre><code>## # A tibble: 6 x 8
+## # Groups:   Year, Age Code [6]
+##   `Age Code`  Year  Female    Male   Upper   Lower UpperGender LowerGender
+##   &lt;chr&gt;      &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt; &lt;chr&gt;       &lt;chr&gt;      
+## 1 0           2014 1939928 2031919 2031919 1939928 Male        Female     
+## 2 0           2015 1954084 2046747 2046747 1954084 Male        Female     
+## 3 0           2016 1968007 2061349 2061349 1968007 Male        Female     
+## 4 0           2017 1981628 2075603 2075603 1981628 Male        Female     
+## 5 0           2018 1994394 2088981 2088981 1994394 Male        Female     
+## 6 0           2019 2006229 2101377 2101377 2006229 Male        Female</code></pre>
+<p>We should now be in a position to start creating the visual.</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,group=1)) #group is required because `Age Code` is a factor</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>This gives us the right shape, but there looks to be something odd going on with the jumps. This is due to the variable “Age Code” being a character variable which is turned into a factor by ggplot2 when used as an x-axis value.</p>
+<p>Because factors are being sorted alphabetically you end up with the projection for 100 near the start, which causes the first spike. We can confirm this:</p>
+<pre class="r"><code>str(as.factor(chartData$`Age Code`))</code></pre>
+<pre><code>##  Factor w/ 101 levels &quot;0&quot;,&quot;1&quot;,&quot;10&quot;,&quot;100+&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
+<p>As you can see, the third and fourth values of the factor are 10 and 100+ not 2 and 3 as we would want, hence the spikes in the chart.</p>
+<p>It’s probably easiest to just code this variable as a numeric value, as text is only needed to signify 100+ which can be dealt with later when labelling the chart.</p>
+<pre class="r"><code>chartData %&gt;% ungroup() %&gt;% mutate(`Age Code`=as.numeric(str_replace(`Age Code`,&quot;\\+&quot;,&quot;&quot;))) -&gt; chartData</code></pre>
+<p>With those changes made, we can now revist the chart:</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper)) </code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>This is now starting to look a bit more promising, we have the right shape for the graph. Because <code>Age Code</code> is now numeric, ggplot2 is also automatically doing some a bit nice looking with the axis labelling.</p>
+<p>Now, let’s try to colour the ribbon based on the highest value:</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender))</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>The original plot also has lines bordering the shaded region, so let’s add those using geom_line:</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender)) +
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender)) +
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender))</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>We now have the basic chart that we need, but it doesn’t look very visually appealling, the next step is to do some formatting to get closer to the original.</p>
+</div>
+<div id="step-3---formatting-the-single-year-plot" class="section level4">
+<h4>Step 3 - Formatting the single year plot</h4>
+<p>First let’s adjust the axis labelling to match the original:</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender)) +
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender)) +
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender)) +
+  scale_y_continuous(&quot;POPULATION&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  theme(text=element_text(colour=&quot;black&quot;), #all text is black
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.y=element_text(vjust=1,angle=0), #move the label of the y to the top and don&#39;t rotate it
+        axis.title.x=element_text(hjust=0,angle=0)) #move the label of the x axis to the left and don&#39;t rotate it</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>This is fairly close, but it doesn’t quite get the y-axis label in the right place. As there’s no title on this plot, we can cheat slightly and just use a left aligned subtitle to the plot to play the role of a y-axis label.</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender)) +
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender)) +
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender)) +
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme(text=element_text(colour=&quot;black&quot;), #all text is black
+        plot.subtitle=element_text(size=9),
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0)) #move the label of the x axis to the left and don&#39;t rotate it</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>This still isn’t quite what we want - it’s currently left algined to the axis not the plot edge, this can be manually adjusted:</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender)) +
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender)) +
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender)) +
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme(text=element_text(colour=&quot;black&quot;), #all text is black
+        plot.subtitle=element_text(size=9),
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9)) -&gt; p #move the label of the x axis to the left and don&#39;t rotate it 
+
+#turn the plot into a gtable object
+g &lt;- ggplotGrob(p)
+#adjust the position of the subtitle
+g$layout$l[g$layout$name == &quot;subtitle&quot;] &lt;- 1
+#draw the new plot
+grid::grid.draw(g)</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>This is close enough for now, precise positioning and alignments of objects within ggplot2 can often be quite time consuming which is why a lot of people choose to incorporate Adobe Illustrator into their workflows in order to add the finishing touches.</p>
+<p>Next I’ll adjust the general style of the plot so that it is a bit clearer:</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender)) +
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender)) +
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender)) +
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme_minimal() + #apply my prefered theme which is close to what Nathan used
+  theme(text=element_text(colour=&quot;black&quot;), #all text is black
+        plot.subtitle=element_text(size=9),
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9),
+        panel.grid.minor.x=element_blank(), #turn off minor gridlines
+        panel.grid.minor.y=element_blank(), #turn off minor gridlines
+        ) -&gt; p
+
+#turn the plot into a gtable object
+g &lt;- ggplotGrob(p)
+#adjust the position of the subtitle
+g$layout$l[g$layout$name == &quot;subtitle&quot;] &lt;- 1
+#draw the new plot
+grid::grid.draw(g)</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>This looks pretty good - the next step is to adjust the colours so they match the original and sort out the legends.</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender)) +
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender),show.legend = FALSE) + 
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender),show.legend = FALSE) + #we don&#39;t need the line colours to have a legend
+  scale_fill_manual(&quot;&quot;,#don&#39;t label the legend
+                    breaks=c(&quot;Male&quot;,&quot;Female&quot;), #choose the order to display in 
+                    labels=c(&quot;More Men&quot;,&quot;More Women&quot;), #match the labelling used in the original
+                    values=c(women,men), #colours to use, in the order of the factor not displayed order
+                    aesthetics = c(&quot;colour&quot;, &quot;fill&quot;))+ #change both the line and fills together
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme_minimal() + #apply my prefered theme which is close to what Nathan used
+  theme(text=element_text(colour=&quot;black&quot;), #all text is black
+        plot.subtitle=element_text(size=9),
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9),
+        panel.grid.minor.x=element_blank(), #turn off minor gridlines
+        panel.grid.minor.y=element_blank(), #turn off minor gridlines
+        legend.position = c(0.2,0.92), #position legend over the plot
+        legend.text = element_text(face=&quot;italic&quot;) #make italic
+        ) -&gt; p
+
+#turn the plot into a gtable object
+g &lt;- ggplotGrob(p)
+#adjust the position of the subtitle
+g$layout$l[g$layout$name == &quot;subtitle&quot;] &lt;- 1
+#draw the new plot
+grid::grid.draw(g)</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>In the original, the fill is slightly transparent so that you can see the top line, so let’s make a small change to both the fill alpha values and the line widths to do that:</p>
+<pre class="r"><code>chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender),
+              alpha=0.8) + #make fill slightly transparent
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender),size=0.9,show.legend = FALSE) + 
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender),size=0.9,show.legend = FALSE) + #we don&#39;t need the line colours to have a legend
+  scale_fill_manual(&quot;&quot;,#don&#39;t label the legend
+                    breaks=c(&quot;Male&quot;,&quot;Female&quot;), #choose the order to display in 
+                    labels=c(&quot;More Men&quot;,&quot;More Women&quot;), #match the labelling used in the original
+                    values=c(women,men), #colours to use, in the order of the factor not displayed order
+                    aesthetics = c(&quot;colour&quot;, &quot;fill&quot;))+ #change both the line and fills together
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme_minimal() + #apply my prefered theme which is close to what Nathan used
+  theme(text=element_text(colour=&quot;black&quot;), #all text is black
+        plot.subtitle=element_text(size=9),
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9),
+        panel.grid.minor.x=element_blank(), #turn off minor gridlines
+        panel.grid.minor.y=element_blank(), #turn off minor gridlines
+        legend.position = c(0.2,0.92), #position legend over the plot
+        legend.text = element_text(face=&quot;italic&quot;) #make italic
+        ) -&gt; p
+
+#turn the plot into a gtable object
+g &lt;- ggplotGrob(p)
+#adjust the position of the subtitle
+g$layout$l[g$layout$name == &quot;subtitle&quot;] &lt;- 1
+#draw the new plot
+grid::grid.draw(g)</code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>This looks pretty close now, having a quick scan through Google Fonts, it looks like “Roboto Mono” is somewhat similar to the font use so I’ll go with that and apply it using the showtext package:</p>
+<pre class="r"><code>library(showtext)
+font_add_google(&quot;Roboto Mono&quot;, &quot;roboto&quot;)
+
+showtext_auto()
+
+chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender),
+              alpha=0.8) + #make fill slightly transparent
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender),size=0.9,show.legend = FALSE) + 
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender),size=0.9,show.legend = FALSE) + #we don&#39;t need the line colours to have a legend
+  scale_fill_manual(&quot;&quot;,#don&#39;t label the legend
+                    breaks=c(&quot;Male&quot;,&quot;Female&quot;), #choose the order to display in 
+                    labels=c(&quot;More Men&quot;,&quot;More Women&quot;), #match the labelling used in the original
+                    values=c(women,men), #colours to use, in the order of the factor not displayed order
+                    aesthetics = c(&quot;colour&quot;, &quot;fill&quot;))+ #change both the line and fills together
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme_minimal() + #apply my prefered theme which is close to what Nathan used
+  theme(text=element_text(colour=&quot;black&quot;,family=&quot;roboto&quot;), #all text is black
+        plot.subtitle=element_text(size=9),
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9),
+        panel.grid.minor.x=element_blank(), #turn off minor gridlines
+        panel.grid.minor.y=element_blank(), #turn off minor gridlines
+        legend.position = c(0.2,0.92), #position legend over the plot
+        legend.text = element_text(face=&quot;italic&quot;) #make italic
+        ) </code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>Unfortunately this way of specifying fonts doesn’t seem to play nicely with my solution to left aligning the title. An alternative is to just manually tweak the hjust value until the positioning looks right in this case (this is not transferable to different lenght titles, but that doesn’t matter for this example).</p>
+<p>For some reason I can’t work out, the fonts are not making it through the rendering process from Rmarkdown into the final HTML page. I’ll manually import a final image with the correct fonts, but for now take it on faith that the fonts look about right in these images…</p>
+<pre class="r"><code>showtext_auto()
+
+chartData %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender),
+              alpha=0.8) + #make fill slightly transparent
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender),size=0.9,show.legend = FALSE) + 
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender),size=0.9,show.legend = FALSE) + #we don&#39;t need the line colours to have a legend
+  scale_fill_manual(&quot;&quot;,#don&#39;t label the legend
+                    breaks=c(&quot;Male&quot;,&quot;Female&quot;), #choose the order to display in 
+                    labels=c(&quot;More Men&quot;,&quot;More Women&quot;), #match the labelling used in the original
+                    values=c(women,men), #colours to use, in the order of the factor not displayed order
+                    aesthetics = c(&quot;colour&quot;, &quot;fill&quot;))+ #change both the line and fills together
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme_minimal() + #apply my prefered theme which is close to what Nathan used
+  theme(text=element_text(colour=&quot;black&quot;,family=&quot;roboto&quot;), #all text is black
+        plot.subtitle=element_text(size=9,hjust=-0.085), # manually tweak subtitle position
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9),
+        panel.grid.minor.x=element_blank(), #turn off minor gridlines
+        panel.grid.minor.y=element_blank(), #turn off minor gridlines
+        legend.position = c(0.2,0.92), #position legend over the plot
+        legend.text = element_text(face=&quot;italic&quot;) #make italic
+        ) </code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>There’s one odd looking element, there’s a gap in the plot where the lines should cross over. One slightly hacky solution is to duplicate the records where the cross over occurs:</p>
+<pre class="r"><code>chartData %&gt;% arrange(Year, `Age Code`) %&gt;%
+  filter(UpperGender!=lag(UpperGender) &amp;`Age Code` &gt; 0) -&gt; crossOvers
+
+crossOvers %&gt;% mutate(UpperGender=if_else(UpperGender==&quot;Male&quot;,&quot;Female&quot;,&quot;Male&quot;),
+                      LowerGender=if_else(LowerGender==&quot;Male&quot;,&quot;Female&quot;,&quot;Male&quot;)) -&gt; crossOvers
+
+chartData %&gt;% rbind(crossOvers) -&gt; chartData2</code></pre>
+<p>Another solution might be to explictly draw two ribbons for each year and not rely on ggplot2 to fill in the gaps.</p>
+<p>The hacky solution broadly looks like it works:</p>
+<pre class="r"><code>chartData2 %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender),
+              alpha=0.8) + #make fill slightly transparent
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender),size=0.9,show.legend = FALSE) + 
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender),size=0.9,show.legend = FALSE) + #we don&#39;t need the line colours to have a legend
+  scale_fill_manual(&quot;&quot;,#don&#39;t label the legend
+                    breaks=c(&quot;Male&quot;,&quot;Female&quot;), #choose the order to display in 
+                    labels=c(&quot;More Men&quot;,&quot;More Women&quot;), #match the labelling used in the original
+                    values=c(women,men), #colours to use, in the order of the factor not displayed order
+                    aesthetics = c(&quot;colour&quot;, &quot;fill&quot;))+ #change both the line and fills together
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme_minimal() + #apply my prefered theme which is close to what Nathan used
+  theme(text=element_text(colour=&quot;black&quot;,family=&quot;roboto&quot;), #all text is black
+        plot.subtitle=element_text(size=9,hjust=-0.085), # manually tweak subtitle position
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9),
+        panel.grid.minor.x=element_blank(), #turn off minor gridlines
+        panel.grid.minor.y=element_blank(), #turn off minor gridlines
+        legend.position = c(0.2,0.92), #position legend over the plot
+        legend.text = element_text(face=&quot;italic&quot;) #make italic
+        ) </code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p>Before getting to animation there are two more missing formatting points - the solid x-axis line and the year value. These are fairly easy to add:</p>
+<pre class="r"><code>chartData2 %&gt;% filter(Year==2014) %&gt;%
+  ggplot() +
+  geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender),
+              alpha=0.8) + #make fill slightly transparent
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender),size=0.9,show.legend = FALSE) + 
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender),size=0.9,show.legend = FALSE) + #we don&#39;t need the line colours to have a legend
+  annotate(&quot;text&quot;,x=10.5,y=1400000,label=&quot;YEAR&quot;,colour=&quot;black&quot;,family=&quot;roboto&quot;,size=4,hjust=&quot;left&quot;)+
+  annotate(&quot;text&quot;,x=10.5,y=1275000,label=&quot;2014&quot;,colour=&quot;black&quot;,family=&quot;roboto&quot;,size=8,hjust=&quot;left&quot;)+
+  scale_fill_manual(&quot;&quot;,#don&#39;t label the legend
+                    breaks=c(&quot;Male&quot;,&quot;Female&quot;), #choose the order to display in 
+                    labels=c(&quot;More Men&quot;,&quot;More Women&quot;), #match the labelling used in the original
+                    values=c(women,men), #colours to use, in the order of the factor not displayed order
+                    aesthetics = c(&quot;colour&quot;, &quot;fill&quot;))+ #change both the line and fills together
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(subtitle=&quot;POPULATION&quot;)+
+  theme_minimal() + #apply my prefered theme which is close to what Nathan used
+  theme(text=element_text(colour=&quot;black&quot;,family=&quot;roboto&quot;), #all text is black
+        plot.subtitle=element_text(size=9,hjust=-0.065), # manually tweak subtitle position
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9),
+        axis.line.x=element_line(colour=&quot;black&quot;), # add a solid black x axis line
+        panel.grid.minor.x=element_blank(), #turn off minor gridlines
+        panel.grid.minor.y=element_blank(), #turn off minor gridlines
+        legend.position = c(0.2,0.92), #position legend over the plot
+        legend.text = element_text(face=&quot;italic&quot;) #make italic
+        ) </code></pre>
+<p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>This now gets pretty close to the final output - if I reimport the final image with the correct fonts then it looks as follows:</p>
+<div class="figure">
+<img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/plot.png" />
+
+</div>
+<p>Some of the alignment isn’t perfect, and the resolution isn’t high as the original and some of the lines could be smoother but partly this is a challenge of trying to get lots of different tools and packages to work well together. Fine tuning graphics in R is definitely still fairly challenging and frustrating.</p>
+<p>Additionally, I’m not sure that I’m that much of a fan of doing all of this work directly into the RMarkdown document which will become the blog post - seems to be too many moving parts.</p>
+</div>
+<div id="step-3---producing-the-animation" class="section level4">
+<h4>Step 3 - Producing the animation</h4>
+<p>The gganimate package is quite new, and currently there aren’t a load of examples to look at when trying to use it. When I tried to simply animate my existing visualisation, this didn’t work as well as I hoped. Specifically, it didn’t want to animate my geom_ribbon at all and I’m not sure why.</p>
+<p>So, for now I’m going to leave it as two animated lines. In order to get the years in the right place, I ended up coming up with a hacky solution which moved the plot title to the right place using hjust/vjust which doesn’t feel like it should be the solution. However, I couldn’t immediately work out how to get gganimate to label the frame anywhere except the title.</p>
+<p>The final code I used to produce the animation is below:</p>
+<pre class="r"><code>showtext_auto()
+chartData2 %&gt;%
+  ggplot() +
+  geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender),size=0.9) + 
+  geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender),size=0.9) + 
+  annotate(&quot;text&quot;,x=10.5,y=1400000,label=&quot;YEAR&quot;,colour=&quot;black&quot;,family=&quot;roboto&quot;,size=4,hjust=&quot;left&quot;)+
+  scale_colour_manual(&quot;&quot;,#don&#39;t label the legend
+                    breaks=c(&quot;Male&quot;,&quot;Female&quot;), #choose the order to display in 
+                    labels=c(&quot;Men&quot;,&quot;Women&quot;), #match the labelling used in the original
+                    values=c(women,men), #colours to use, in the order of the factor not displayed order
+  )+
+  scale_y_continuous(&quot;&quot;, #the title for the axis
+                     limits=c(0,3000000), #set the top and bottom value
+                     expand=c(0,0), #don&#39;t expand beyond the specified limits
+                     breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                     labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+  scale_x_continuous(&quot;AGE&quot;, #axis title
+                     breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                     labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+  labs(title=&#39;{frame_time}&#39;,
+       subtitle=&quot;POPULATION&quot;)+
+  theme_minimal() + #apply my prefered theme which is close to what Nathan used
+  theme(text=element_text(colour=&quot;black&quot;,family=&quot;roboto&quot;), #all text is black
+        plot.title = element_text(size=14,hjust=0.16,vjust=-135),
+        plot.subtitle=element_text(size=9,hjust=-0.13), # manually tweak subtitle position
+        axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+        axis.title.x=element_text(hjust=0,angle=0,size=9),
+        axis.line.x=element_line(colour=&quot;black&quot;), # add a solid black x axis line
+        panel.grid.minor.x=element_blank(), #turn off minor gridlines
+        panel.grid.minor.y=element_blank(), #turn off minor gridlines
+        legend.position = c(0.2,0.92), #position legend over the plot
+        legend.text = element_text(face=&quot;italic&quot;) #make italic
+  ) +
+  transition_time(Year) +
+  ease_aes(&#39;linear&#39;) -&gt; animation</code></pre>
+<div class="figure">
+<img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/file68b0354a5442.gif" />
+
+</div>
+</div>
+<div id="conclusions" class="section level4">
+<h4>Conclusions</h4>
+<ol style="list-style-type: decimal">
+<li>Specific formatting of plots in pure R is hard.</li>
+<li>Fonts in particular are a nightmare.</li>
+<li>All the different ways of rendering plots and the different impacts on positioning etc. are annoying/hard to understand.</li>
+<li>gganimate isn’t super easy to pick up and do whatever you want with it without quite a bit of effort.</li>
+</ol>
+<p>I’ve not quite gotten to the final visualisation as I hope to do, but got pretty close and found this a useful learning experience even if it was at times quite frustrating!</p>
+<p>If you’ve read all this and found it useful/interesting then please let me know! I’d also welcome any recommendations on how I could have done any of this better (especially how to get to the final plot using R).</p>
+</div>
