@@ -20,9 +20,25 @@ categories:
 <img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/male-female-bivariate.gif" />
 
 </div>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD Note, I’m mostly interested in the visual aspect and may not get around to working out which specific font he used. I’m also going to be writing this post as a live / stream of conciousness / working document with minimal editting so there may or may not end up being dead ends, hopefully this is still useful.</p>
+<p>======= &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
 <p>Note, I’m mostly interested in the visual aspect and may not get around to working out which specific font he used. I’m also going to be writing this post as a live / stream of conciousness / working document with minimal editting so there may or may not end up being dead ends, hopefully this is still useful.</p>
-<div id="step-1---get-the-data" class="section level4">
-<h4>Step 1 - Get the data</h4>
+<p>======= Note, I’m mostly interested in the visual aspect and may not get around to working out which specific font he used. I’m also going to be writing this post as a live / stream of conciousness / working document with minimal editting so there may or may not end up being dead ends, hopefully this is still useful.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>af2ebbb6bcddc3e5749e5f7d8f1f26e5860eadce 808bc7c5cb56225ad3c9130c806e6396bb8b399d #### Step 1 - Get the data</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 <p>Nathan helpfully links to the CDC for access to the projections, I ended up getting my data from <a href="https://wonder.cdc.gov/population-projections-2014-2060.html">this specific link</a>. This tool enables you to download a text file of the data. This file is relatively small, but also has a load of meta data / notes in the footer, to make my life easier I just deleted this information before trying to use it in R but it would be better to deal with this programmatically.</p>
 <p>Load the required packages:</p>
 <pre class="r"><code>library(tidyverse)
@@ -61,9 +77,9 @@ head(data)</code></pre>
 <pre class="r"><code>men &lt;- &quot;#ec6047&quot;
 women &lt;- &quot;#3ba0a7&quot;
 colours &lt;- c(men,women)</code></pre>
-</div>
-<div id="step-2---build-a-basic-plot-for-a-single-year" class="section level4">
-<h4>Step 2 - Build a basic plot for a single year</h4>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<p>======= &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<p>======= &gt;&gt;&gt;&gt;&gt;&gt;&gt; af2ebbb6bcddc3e5749e5f7d8f1f26e5860eadce &gt;&gt;&gt;&gt;&gt;&gt;&gt; 808bc7c5cb56225ad3c9130c806e6396bb8b399d #### Step 2 - Build a basic plot for a single year</p>
 <p>Before worrying about the animation, let’s start with a single year of data, gganimate plays nicely with ggplot2 so the final stage should be simple once this is done.</p>
 <p>Looking at the plot, it looks like we’re going to need to use geom_ribbon for the bulk of the visualisation, which requires an upper/lower bound for the area to be drawn. This means that the data will need a bit of reformatting - first we need to transpose the data so we have a column for Male and Female with a single row for year. Then we will need a column for the highest/lowest value and a further column to flag up which value is highest.</p>
 <p>This is probably easier to explain via code:</p>
@@ -116,7 +132,6 @@ head(chartData)</code></pre>
   geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender))</code></pre>
 <p><img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>We now have the basic chart that we need, but it doesn’t look very visually appealling, the next step is to do some formatting to get closer to the original.</p>
-</div>
 <div id="step-3---formatting-the-single-year-plot" class="section level4">
 <h4>Step 3 - Formatting the single year plot</h4>
 <p>First let’s adjust the axis labelling to match the original:</p>
