@@ -506,3 +506,93 @@ chartData2 %&gt;%
 <p>I’ve not quite gotten to the final visualisation as I hope to do, but got pretty close and found this a useful learning experience even if it was at times quite frustrating!</p>
 <p>If you’ve read all this and found it useful/interesting then please let me know! I’d also welcome any recommendations on how I could have done any of this better (especially how to get to the final plot using R).</p>
 </div>
+<div id="update-27102018" class="section level4">
+<h4>UPDATE 27/10/2018</h4>
+<p>Wow, this has a gotten a lot of attention!</p>
+<p>Firstly, thanks to everyone who has read this, and thanks in particular for Nathan Yau and Thomas Lin Pedersen for their replies to me on Twitter.</p>
+<p>It seems like gganimate should be able to cope with what I’m asking it to do, so at some point soon I’m going to produce a reprex and file an issue on Github to try and solve this mystery.</p>
+<p>Nathan shared that he uses the “animation” package / ImageMagick to produce his work, so I’ve taken a look into using that to turn the static plots into an animation. This was fairly simple, and pretty sucessful (my version is still lower resolution / doesn’t have the smoothest curves, the alignment isn’t perfect and the font in my key isn’t correct).</p>
+<p>The key steps were:</p>
+<ul>
+<li>Create a more transparent set of lines/ribbons for the 2014 data, by creating a seperate filtered dataset and passing this to ggplot2. This creates the “shadow” effect in the original visualisation.</li>
+<li>Put a loop around the single year visualisation code to filter to each year in turn</li>
+<li>Save the individual plot for each year to disk with a fixed name</li>
+<li>Create a list (in the right order) of the images created and pass this list to the “im.convert” function.</li>
+</ul>
+<pre class="r"><code>#loop through years and then combine together using imagemagick (via animation package)
+library(animation)</code></pre>
+<pre><code>## Warning: package &#39;animation&#39; was built under R version 3.5.1</code></pre>
+<pre class="r"><code>chartData2 %&gt;% filter(Year==2014) -&gt; chartData2_first # get a 2014 version of the dataset to use for the &quot;shadow&quot; effect
+chartData2 %&gt;% distinct(Year) %&gt;% pull() -&gt; years #get all of the unique years in the data to loop through
+i &lt;- 0 #keep track of the frame number, initially it&#39;s zero
+#files list needs to be in numeric not alphabetical, (wildcards don&#39;t work properly) so create an empty list to append to
+filelist &lt;- c()
+
+
+for (year in years){
+  i &lt;- i+1
+  chartData2 %&gt;% filter(Year==year) %&gt;%
+    ggplot() +
+    geom_ribbon(data=chartData2_first,aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender),
+                alpha=0.25) + #make fill slightly transparent
+    geom_line(data=chartData2_first,aes(x=`Age Code`,y=Lower,colour=LowerGender),size=0.9,show.legend = FALSE,alpha=0.5) + 
+    geom_line(data=chartData2_first,aes(x=`Age Code`,y=Upper,colour=UpperGender),size=0.9,show.legend = FALSE,alpha=0.5) +
+    geom_ribbon(aes(x=`Age Code`,ymin=Lower,ymax=Upper,fill=UpperGender),
+                alpha=0.8) + #make fill slightly transparent
+    geom_line(aes(x=`Age Code`,y=Lower,colour=LowerGender),size=0.9,show.legend = FALSE) + 
+    geom_line(aes(x=`Age Code`,y=Upper,colour=UpperGender),size=0.9,show.legend = FALSE) + #we don&#39;t need the line colours to have a legend
+    annotate(&quot;text&quot;,x=10.5,y=1400000,label=&quot;YEAR&quot;,colour=&quot;black&quot;,family=&quot;roboto&quot;,size=4,hjust=&quot;left&quot;)+
+    annotate(&quot;text&quot;,x=10.5,y=1275000,label=year,colour=&quot;black&quot;,family=&quot;roboto&quot;,size=8,hjust=&quot;left&quot;)+
+    scale_fill_manual(&quot;&quot;,#don&#39;t label the legend
+                      breaks=c(&quot;Male&quot;,&quot;Female&quot;), #choose the order to display in 
+                      labels=c(&quot;More Men&quot;,&quot;More Women&quot;), #match the labelling used in the original
+                      values=c(women,men), #colours to use, in the order of the factor not displayed order
+                      aesthetics = c(&quot;colour&quot;, &quot;fill&quot;))+ #change both the line and fills together
+    scale_y_continuous(&quot;&quot;, #the title for the axis
+                       limits=c(0,3000000), #set the top and bottom value
+                       expand=c(0,0), #don&#39;t expand beyond the specified limits
+                       breaks=c(0,500000,1000000,1500000,2000000,2500000,3000000), #specify what to put on the axis
+                       labels=scales::comma_format(scale=0.001,suffix=&quot;k&quot;)) + # format the displayed numbers using the scales package
+    scale_x_continuous(&quot;AGE&quot;, #axis title
+                       breaks= c(0,10,20,30,40,50,60,70,80,90,100),
+                       labels=c(&quot;0&quot;,&quot;10&quot;,&quot;20&quot;,&quot;30&quot;,&quot;40&quot;,&quot;50&quot;,&quot;60&quot;,&quot;70&quot;,&quot;80&quot;,&quot;90&quot;,&quot;100+&quot;)) +
+    labs(subtitle=&quot;POPULATION&quot;)+
+    theme_minimal() + #apply my prefered theme which is close to what Nathan used
+    theme(text=element_text(colour=&quot;black&quot;,family=&quot;roboto&quot;), #all text is black
+          plot.subtitle=element_text(size=9,hjust=-0.065), # manually tweak subtitle position
+          axis.text = element_text(colour=&quot;black&quot;), #make sure labels are black also
+          axis.title.x=element_text(hjust=0,angle=0,size=9),
+          axis.line.x=element_line(colour=&quot;black&quot;), # add a solid black x axis line
+          panel.grid.minor.x=element_blank(), #turn off minor gridlines
+          panel.grid.minor.y=element_blank(), #turn off minor gridlines
+          legend.position = c(0.2,0.92), #position legend over the plot
+          legend.text = element_text(face=&quot;italic&quot;) #make italic
+    ) 
+  ggsave(paste0(&quot;frame&quot;,i,&quot;.png&quot;),width = 7.68,height=5.49,dpi=100) #save the image
+  filelist &lt;- c(filelist,paste0(&quot;frame&quot;,i,&quot;.png&quot;)) #append to the file list
+}
+
+
+#point convert at the short path to imagemagick convert - fails if a space in the path
+ani.options(convert = &#39;C://PROGRA~1//IMAGEM~1.8-Q//convert.exe&#39;,
+            interval=0.15)
+im.convert(filelist, output = &quot;animation.gif&quot;, convert = c(&quot;convert&quot;),
+           clean = TRUE) #TRUE deletes the .png files after running the code.</code></pre>
+<pre><code>## Executing: 
+## &quot;C://PROGRA~1//IMAGEM~1.8-Q//convert.exe -loop 0 -delay 15
+##     frame1.png frame2.png frame3.png frame4.png frame5.png
+##     frame6.png frame7.png frame8.png frame9.png frame10.png
+##     frame11.png frame12.png frame13.png frame14.png frame15.png
+##     frame16.png frame17.png frame18.png frame19.png frame20.png
+##     frame21.png frame22.png frame23.png frame24.png frame25.png
+##     frame26.png frame27.png frame28.png frame29.png frame30.png
+##     frame31.png frame32.png frame33.png frame34.png frame35.png
+##     frame36.png frame37.png frame38.png frame39.png frame40.png
+##     frame41.png frame42.png frame43.png frame44.png frame45.png
+##     frame46.png frame47.png &quot;animation.gif&quot;&quot;</code></pre>
+<pre><code>## Output at: animation.gif</code></pre>
+<div class="figure">
+<img src="/post/2018-10-25-replicating-flowingdata-population-charts-in-r_files/animation.gif" />
+
+</div>
+</div>
