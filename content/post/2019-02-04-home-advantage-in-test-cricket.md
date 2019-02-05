@@ -21,7 +21,7 @@ The first thing I wanted to look at was whether or not the win rate of home team
 
 This graph was built from yearly data, the figures are simply the total number of tests won by the home and away teams divided by the total number of test matches played in that year. Throughout this post I've made heavy use of [loess](https://en.wikipedia.org/wiki/Local_regression), which is a type of regression, to produce smooth lines for the visualisations. I think this helps to make sense of trends in quite a messy dataset, but it is worth noting that the patterns you will see in the raw data are less clear than these summaries might suggest.
 
-As the thing we ultimately care about is "Home advantage" we can simplify this graph to only look at one variable. Thoughtout I'm going to consider home advantage to be the difference in win rate between the home team and the away team. So if the home team wins 50% of the time, and the away team 30% of the time then there's a home advantage of 20% points.
+As the thing we ultimately care about is "Home advantage" we can simplify this graph to only look at one variable. Throughout I'm going to consider home advantage to be the difference in win rate between the home team and the away team. So if the home team wins 50% of the time, and the away team 30% of the time then there's a home advantage of 20% points.
 
 ![Graph of home advantage in test cricket over time](/post/2019-02-04-home-advantage-in-test-cricket_files/home_advantage_simple.png)
 
@@ -47,7 +47,14 @@ If we calculate test cricket Elo ratings for major test playing nations since 19
 
 This suggests that India and South Africa are currently the best teams in the world and that England really should be doing better vs the West Indies. These ratings are not perfectly aligned to the [ICC Rankings](https://www.icc-cricket.com/rankings/mens/team-rankings/test), the top two teams are swapped and England stand out as being much lower here (though both approaches have England/New Zealand/Australia at very similar ratings).
 
-(Data viz aside - Really this is too many lines to have in one chart, and too many of the cricketting nations have very similar colour choices for their ODI kits making it hard to distinguish the lines here.)
+
+-----
+
+Data viz aside - Really this is too many lines to have in one chart, and too many of the cricketting nations have very similar colour choices for their ODI kits making it hard to distinguish the lines here. Perhaps this alternative is better?
+
+![Test Cricket Elo Ratings](/post/2019-02-04-home-advantage-in-test-cricket_files/test_cricket_elo_facet.png)
+
+-----
 
 Using this system, the difference in Elo rating between two teams allows us to calculate directly the probability of each side winning the game. Once we have that, we can get back to answering the original question of home advantage. Across each year, we can compare the difference in observed win rates for home teams compared to what we would expect based on the relative strengths of the two teams. 
 
