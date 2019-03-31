@@ -1,7 +1,7 @@
 ---
 title: Scatter plots, best fit lines (and regression to the mean)
 author: Steve Burr
-date: '2019-03-27'
+date: '2019-03-31'
 slug: scatter-plots-and-best-fit-lines
 categories:
   - Statistics
@@ -11,7 +11,7 @@ categories:
 tags: []
 ---
 
-Last week I came across an interesting conversation on twitter, which raiased something I hadn't thought about before:
+Last week I came across an interesting conversation on twitter, which raised something I hadn't thought about before:
 
 ```{r echo=FALSE}
 blogdown::shortcode('tweet', '1107680006476578818')
@@ -151,7 +151,7 @@ basic_scatter + labs(title="Scatter plot of simulated data where x partly determ
 
 #### The linear regression line
 
-Lets start with the standard "best fit" line, the regression line which predicts y from x:
+Let's start with the standard "best fit" line, the regression line which predicts y from x:
 
 ```{r}
 
@@ -177,7 +177,7 @@ ggplot(data) +
         legend.text=element_text(colour="grey50")) -> scatter_with_yx #this plot is saved for later
 
 #print the plot
-scatter_with_yx + labs(title="Linear regression fit y~x overlayed on simulated data",caption="Viz by @stevejburr")
+scatter_with_yx + labs(title="Linear regression fit y~x overlaid on simulated data",caption="Viz by @stevejburr")
 
 ```
 
@@ -200,7 +200,7 @@ A real example of this comes from the work of Francis Galton which helped to giv
 ![Galton's linear regression analysis of parent and child heights - Source: Wikipedia](/post/2019-03-27-scatter-plots-and-best-fit-lines_files/Galton's_correlation_diagram_1875.jpg)
 
 
-This comes down to the random part of the model which isn't captured by the coefficients. When someone is exceptionally tall, the model says that this is partly due to underlying factors we can measure (e.g. genetics - approximated by parent height) but also partly driven by random chance. In other words, a very tall parent may pass on the genetic traits for being tall but not the specific combination of other random factors which led to their exceptional height - luck is not inheritted!
+This comes down to the random part of the model which isn't captured by the coefficients. When someone is exceptionally tall, the model says that this is partly due to underlying factors we can measure (e.g. genetics - approximated by parent height) but also partly driven by random chance. In other words, a very tall parent may pass on the genetic traits for being tall but not the specific combination of other random factors which led to their exceptional height - luck is not inherited!
 
 Effects like this can be seen in all sorts of fields, for example sports (see the "Sports Illustrated Cover Curse"), company performance and performance of fund managers. When you measure over time, you tend to see that the best performers in one time period tend to do worse in subsequent periods (and vice versa, the worst performers will tend to do better than next year). One aspect of their performance is down to underlying skills / fundamentals but what makes them exceptional in one year is the extra element of good or bad luck.
 
@@ -273,7 +273,7 @@ data %>%
 #add the conditional means to the existing scatter plot:
 scatter_with_yx +
   geom_segment(data=condMeans,
-               aes(x=min_x,xend=max_x,y=y_bar,yend=y_bar))+ labs(title="Linear regression fit y~x overlayed on simulated data",
+               aes(x=min_x,xend=max_x,y=y_bar,yend=y_bar))+ labs(title="Linear regression fit y~x overlaid on simulated data",
                                                                  subtitle="The line matches closely to conditional means evaluated across bands of x values",caption="Viz by @stevejburr")
 ```
 
@@ -344,8 +344,8 @@ ggplot(data) +
         axis.title=element_text(colour="grey50"),
         axis.text=element_text(colour="grey50"),
         legend.text=element_text(colour="grey50")) +
-  labs(title="Simulated data with best fit line from PCA overlayed",
-       subtitle="This approaches makes poorer predictions of y at extreme values of x",
+  labs(title="Simulated data with best fit line from PCA overlaid",
+       subtitle="This approach makes poorer predictions of y at extreme values of x",
        caption="Viz by @stevejburr")
 
 ```
@@ -379,7 +379,7 @@ ggplot(data) +
         axis.title=element_text(colour="grey50"),
         axis.text=element_text(colour="grey50"),
         legend.text=element_text(colour="grey50")) +
-  labs(title="Simulated data with best fit line x~y overlayed",
+  labs(title="Simulated data with best fit line x~y overlaid",
        caption="Viz by @stevejburr")
 
 ```
@@ -503,9 +503,9 @@ There are multiple ways of drawing a line of best fit through a simple (x,y) sca
 
 If the goal is prediction of y from x, when it likely that the relationship between the two variables does run in that direction, then the least squares / linear regression fit will give the most reliable estimates of y throughout the full range of x.
 
-It has been suggested that the most natural line that people draw by eye is in fact the orthogonal regression (PCA) line, if that is indeed the case then this will lead to over estimates of the correlation between two variables and a tendency for estimates done "by eye" to be too low for small values and two high for larger values (when there is a positive correlation between the two variables).
+It has been suggested that the most natural line that people draw by eye is in fact the orthogonal regression (PCA) line. If that is indeed the case then this will lead to over estimates of the correlation between two variables and a tendency for estimates done "by eye" to be too low for small values and too high for larger values (when there is a positive correlation between the two variables).
 
-This is worth keeping in mind when doing exploratory analysis by hand, and explictly drawing on standard linear regression lines may help to avoid mistakes when interpretting these relationships.
+This is worth keeping in mind when doing exploratory analysis by hand, and explictly drawing on standard linear regression lines may help to avoid mistakes when interpreting these relationships.
 
 
 
