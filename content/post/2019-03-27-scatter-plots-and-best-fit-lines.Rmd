@@ -20,6 +20,14 @@ blogdown::shortcode('tweet', '1107680006476578818')
 
 There were a number of good responses, including links to a few blog posts digging into how all this works, but I wanted to try and summarise what I think are the most important points and have a go at putting together my own versions of the visualisations.
 
+In short, if I have a scatter plot of same data, there are at least three different ways to put a line of best fit through the data -
+
+```{r}
+
+```
+
+This post explores the how, why and interpretation of these three lines.
+
 #### The basics
 
 We're going to need some simulated data to plot, so let's simulate some using R:
@@ -50,6 +58,8 @@ ggplot(data) +
   theme(panel.grid=element_blank(),
         axis.title=element_blank())
 ```
+
+#### The linear regression line
 
 Now lets draw the different lines onto the data.
 
@@ -88,17 +98,35 @@ y = Bx + intercept + error
 The key assumption here is that there is a simple linear relationship between x and y, whereby each unit increase in x results in a corresponding increase of B in y. Any variation in the data not captured by this relationship is assumed to be the result of random variation. Within most regression analyses this error is assumed to be normally distributed with mean 0 and constant variance across all the values of x (i.e. we predict the data equally well at any point on the line).
 
 
-A real example of this comes from the work of Francis Galton which helped to give regression analysis it's name. Galton studied the relationship between the heights of parents and their children. He noted that though taller parents have taller children, those children are less exceptionally tall than their parents. That is, heights "regression to the mean". 
+A real example of this comes from the work of Francis Galton which helped to give regression analysis its name. Galton studied the relationship between the heights of parents and their children. He noted that though taller parents have taller children, those children are less exceptionally tall than their parents. That is, heights "regress to the mean". 
 
-This comes down to the random part of the model which isn't captured by the coefficients in the model. When someone is exceptionally tall, the model says that this is partly due to underlying factors (e.g. genetics) but also partly driven by random chance. In other words, a very tall parent may pass on the genetic traits for being tall but not the specific combination of other random factors which led to their exceptional height - luck is not inheritted!
+![Galton's linear regression analysis of parent and child heights - Source: Wikipedia](/post/2019-03-27-scatter-plots-and-best-fit-lines_files/Galton's_correlation_diagram_1875.jpg)
+
+
+This comes down to the random part of the model which isn't captured by the coefficients. When someone is exceptionally tall, the model says that this is partly due to underlying factors (e.g. genetics) but also partly driven by random chance. In other words, a very tall parent may pass on the genetic traits for being tall but not the specific combination of other random factors which led to their exceptional height - luck is not inheritted!
 
 Effects like this can be seen in all sorts of fields, for example Sports (see the "Sports Illustrated Cover Curse"), company performance and performance of fund managers. When you measure over time, you tend to see that the best performers in one time period tend to do worse in subsequent periods (and vice versa, the worst performers will tend to do better than next year). One aspect of their performance is down to underlying skills / fundamentals but what makes them exceptional in one year is the extra element of good or bad luck.
 
+These examples help to give some real world intuition to this concept (and help you reason about the future from what you've observed in the past) but we can look at this in more abstract terms. This is well explained in Gelman/Hill's regression analysis book, and I've tried to illustrate their example in the next visualisation:
+
  - Reference the stuff from Gelman/Hill here
+ 
+```{r}
 
-[https://en.wikipedia.org/wiki/Linear_regression#/media/File:Galton%27s_correlation_diagram_1875.jpg]
+```
+ 
+ 
 
 
+Another, final, way of thinking about this is that linear regression is estimating the mean value of y conditional on the value of x. In other words, if we have a lot of data for a given problem, and we want to predict a new value y based on a fixed value of x, then the best thing to do is predict the new y value to be the average of all the data points with the same value of x. In most real cases, we won't have enough data to just consider x values with the same value as what we want to predict, so the regression analysis allows us to make use of all the data we have across all the values of x to make a prediction at specified value of x.
+
+We can satisfy ourselves that the linear regression line represents the average value of y given a value of x by doing some summarisation. If we split x into five approximately equal chunks, calculate the average value of y within each of these chunks and then add these averages to the scatter plot we see that the linear regression line comes very close to these conditional means:
+
+```{r}
+
+```
+
+Draw the regression line vs binned conditional means
 
 
 **References**
@@ -106,3 +134,4 @@ Effects like this can be seen in all sorts of fields, for example Sports (see th
 - https://benediktehinger.de/blog/science/scatterplots-regression-lines-and-the-first-principal-component/
 - https://onunicornsandgenes.blog/2013/05/31/how-to-draw-the-line-with-ggplot2/
 - Gelman & Hill "Data Analysis Using Regression and Multilevel/Hierarchcial Models" - Section 4.3
+- https://en.wikipedia.org/wiki/Linear_regression
