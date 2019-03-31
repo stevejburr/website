@@ -1,7 +1,7 @@
 ---
 title: Scatter plots, best fit lines (and regression to the mean)
 author: Steve Burr
-date: '2019-03-27'
+date: '2019-03-31'
 slug: scatter-plots-and-best-fit-lines
 categories:
   - Statistics
@@ -13,7 +13,7 @@ tags: []
 
 
 
-<p>Last week I came across an interesting conversation on twitter, which raiased something I hadn’t thought about before:</p>
+<p>Last week I came across an interesting conversation on twitter, which raised something I hadn’t thought about before:</p>
 {{% tweet "1107680006476578818" %}}
 <p>There were a number of good responses, including links to a few blog posts digging into how all this works, but I wanted to try and summarise what I think are the most important points and have a go at putting together my own versions of the visualisations.</p>
 <p>In short, if I have a scatter plot of some data, there are at least three different ways to put a line of best fit through the data -</p>
@@ -51,7 +51,7 @@ basic_scatter + labs(title=&quot;Scatter plot of simulated data where x partly d
 </div>
 <div id="the-linear-regression-line" class="section level4">
 <h4>The linear regression line</h4>
-<p>Lets start with the standard “best fit” line, the regression line which predicts y from x:</p>
+<p>Let’s start with the standard “best fit” line, the regression line which predicts y from x:</p>
 <pre class="r"><code>#fit the model
 line1 &lt;- lm(y~x)$coef
 #extract the slope from the fitted model
@@ -74,7 +74,7 @@ ggplot(data) +
         legend.text=element_text(colour=&quot;grey50&quot;)) -&gt; scatter_with_yx #this plot is saved for later
 
 #print the plot
-scatter_with_yx + labs(title=&quot;Linear regression fit y~x overlayed on simulated data&quot;,caption=&quot;Viz by @stevejburr&quot;)</code></pre>
+scatter_with_yx + labs(title=&quot;Linear regression fit y~x overlaid on simulated data&quot;,caption=&quot;Viz by @stevejburr&quot;)</code></pre>
 <p><img src="/post/2019-03-27-scatter-plots-and-best-fit-lines_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 </div>
 <div id="what-is-the-standard-regression-line-doing" class="section level4">
@@ -88,7 +88,7 @@ scatter_with_yx + labs(title=&quot;Linear regression fit y~x overlayed on simula
 <img src="/post/2019-03-27-scatter-plots-and-best-fit-lines_files/Galton&#39;s_correlation_diagram_1875.jpg" alt="Galton’s linear regression analysis of parent and child heights - Source: Wikipedia" />
 <p class="caption">Galton’s linear regression analysis of parent and child heights - Source: Wikipedia</p>
 </div>
-<p>This comes down to the random part of the model which isn’t captured by the coefficients. When someone is exceptionally tall, the model says that this is partly due to underlying factors we can measure (e.g. genetics - approximated by parent height) but also partly driven by random chance. In other words, a very tall parent may pass on the genetic traits for being tall but not the specific combination of other random factors which led to their exceptional height - luck is not inheritted!</p>
+<p>This comes down to the random part of the model which isn’t captured by the coefficients. When someone is exceptionally tall, the model says that this is partly due to underlying factors we can measure (e.g. genetics - approximated by parent height) but also partly driven by random chance. In other words, a very tall parent may pass on the genetic traits for being tall but not the specific combination of other random factors which led to their exceptional height - luck is not inherited!</p>
 <p>Effects like this can be seen in all sorts of fields, for example sports (see the “Sports Illustrated Cover Curse”), company performance and performance of fund managers. When you measure over time, you tend to see that the best performers in one time period tend to do worse in subsequent periods (and vice versa, the worst performers will tend to do better than next year). One aspect of their performance is down to underlying skills / fundamentals but what makes them exceptional in one year is the extra element of good or bad luck.</p>
 <p>These examples help to give some real world intuition to this concept (and help you reason about the future from what you’ve observed in the past) but we can look at this in more abstract terms. This is well explained in Gelman/Hill’s regression analysis book, and I’ve tried to illustrate their example in the next visualisation.</p>
 <p>The code to do this is a little bit longer than the previous plots, but most of it deals with standardisation of the variables. This means that we subtract the mean of each variable from each observation of that variable, so the values are centered about 0, which now represents the average value. We also divide each value by the standard deviation, meaning each value shows how many standard deviations away from the mean each observation is. As the data is simulated from a normal distribution, nearly all of the values will lie between -3/+3, with the vast majority between -2/+2.</p>
@@ -149,7 +149,7 @@ data %&gt;%
 #add the conditional means to the existing scatter plot:
 scatter_with_yx +
   geom_segment(data=condMeans,
-               aes(x=min_x,xend=max_x,y=y_bar,yend=y_bar))+ labs(title=&quot;Linear regression fit y~x overlayed on simulated data&quot;,
+               aes(x=min_x,xend=max_x,y=y_bar,yend=y_bar))+ labs(title=&quot;Linear regression fit y~x overlaid on simulated data&quot;,
                                                                  subtitle=&quot;The line matches closely to conditional means evaluated across bands of x values&quot;,caption=&quot;Viz by @stevejburr&quot;)</code></pre>
 <p><img src="/post/2019-03-27-scatter-plots-and-best-fit-lines_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 </div>
@@ -204,8 +204,8 @@ pca.intercept &lt;- mean(y) - (pca.slope * mean(x))</code></pre>
         axis.title=element_text(colour=&quot;grey50&quot;),
         axis.text=element_text(colour=&quot;grey50&quot;),
         legend.text=element_text(colour=&quot;grey50&quot;)) +
-  labs(title=&quot;Simulated data with best fit line from PCA overlayed&quot;,
-       subtitle=&quot;This approaches makes poorer predictions of y at extreme values of x&quot;,
+  labs(title=&quot;Simulated data with best fit line from PCA overlaid&quot;,
+       subtitle=&quot;This approach makes poorer predictions of y at extreme values of x&quot;,
        caption=&quot;Viz by @stevejburr&quot;)</code></pre>
 <p><img src="/post/2019-03-27-scatter-plots-and-best-fit-lines_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>If you draw the natural line in your head, then you can think of the standard regression line as being produced by pulling the ends of the natural line towards the center of the data to moderate the predictions. I think this is a nice, intuitive way of thinking about these different approaches which captures a lot of the reasons behind the differences.</p>
@@ -234,7 +234,7 @@ ggplot(data) +
         axis.title=element_text(colour=&quot;grey50&quot;),
         axis.text=element_text(colour=&quot;grey50&quot;),
         legend.text=element_text(colour=&quot;grey50&quot;)) +
-  labs(title=&quot;Simulated data with best fit line x~y overlayed&quot;,
+  labs(title=&quot;Simulated data with best fit line x~y overlaid&quot;,
        caption=&quot;Viz by @stevejburr&quot;)</code></pre>
 <p><img src="/post/2019-03-27-scatter-plots-and-best-fit-lines_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 </div>
@@ -342,8 +342,8 @@ data %&gt;%
 <h4>Conclusion</h4>
 <p>There are multiple ways of drawing a line of best fit through a simple (x,y) scatter plot, and each make different assumptions about the underlying relationships between the two variables.</p>
 <p>If the goal is prediction of y from x, when it likely that the relationship between the two variables does run in that direction, then the least squares / linear regression fit will give the most reliable estimates of y throughout the full range of x.</p>
-<p>It has been suggested that the most natural line that people draw by eye is in fact the orthogonal regression (PCA) line, if that is indeed the case then this will lead to over estimates of the correlation between two variables and a tendency for estimates done “by eye” to be too low for small values and two high for larger values (when there is a positive correlation between the two variables).</p>
-<p>This is worth keeping in mind when doing exploratory analysis by hand, and explictly drawing on standard linear regression lines may help to avoid mistakes when interpretting these relationships.</p>
+<p>It has been suggested that the most natural line that people draw by eye is in fact the orthogonal regression (PCA) line. If that is indeed the case then this will lead to over estimates of the correlation between two variables and a tendency for estimates done “by eye” to be too low for small values and too high for larger values (when there is a positive correlation between the two variables).</p>
+<p>This is worth keeping in mind when doing exploratory analysis by hand, and explictly drawing on standard linear regression lines may help to avoid mistakes when interpreting these relationships.</p>
 <p><strong>References</strong></p>
 <ul>
 <li><a href="https://benediktehinger.de/blog/science/scatterplots-regression-lines-and-the-first-principal-component/" class="uri">https://benediktehinger.de/blog/science/scatterplots-regression-lines-and-the-first-principal-component/</a></li>
