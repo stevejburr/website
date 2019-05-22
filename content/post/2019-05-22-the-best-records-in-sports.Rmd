@@ -66,7 +66,7 @@ Moving on to Formula 1, currently we're seeing Lewis Hamilton potentially on cou
 
 This data was filtered to drivers with at least one win, one pole or one fastest lap over their careers. 
 
-You can make a case for Hamilton being by far the most statistically successful driver in the modern era, but he falls short of the ridiculous statistics acheived by Fangio, Ascari and Clark. On the subject of Jim Clark, the piece Richard Hammond presented on him in most recent series of the Grand Tour is excellent and worth a watch for F1 fans.
+You can make a case for Hamilton being by far the most statistically successful driver in the modern era, but he falls short of the ridiculous statistics achieved by Fangio, Ascari and Clark. On the subject of Jim Clark, the piece Richard Hammond presented on him in most recent series of the Grand Tour is excellent and worth a watch for F1 fans.
 
 #### Football
 
@@ -78,7 +78,7 @@ It's quite interesting to see the impressive stats of names from the 1940s-1960s
 
 ![](/post/2019-05-22-the-best-records-in-sports_files/football.png)
 
-Here, Messi stands out in the modern era, but depsite the similar distributions for the bulk of players his acheivements aren't as extreme in the context of the history of football. And though Messi does stand relatively alone in the modern era, Cristiano Ronaldo clearly bridges the gap to the rest of the pack as another exceptional performer. This is a bit similar to Bjorn Borg's clay court record in tennis making Nadal look less of an outlier than he otherwise would.
+Here, Messi stands out in the modern era, but depsite the similar distributions for the bulk of players his achievements aren't as extreme in the context of the history of football. And though Messi does stand relatively alone in the modern era, Cristiano Ronaldo clearly bridges the gap to the rest of the pack as another exceptional performer. This is a bit similar to Bjorn Borg's clay court record in tennis making Nadal look less of an outlier than he otherwise would.
 
 
 
