@@ -28,6 +28,8 @@ With that goal in mind (fun!) I decided to get hold of some data from other spor
 The full code for doing this is on my [Github](https://github.com/stevejburr/Sports-stats).
 
 
+#### Tennis
+
 Let's start with tennis, I couldn't find a website with the stats I wanted which was easy to webscrape, so I ended up manually copy and pasting a few pages from [atptour.com](https://www.atptour.com/en/performance-zone/win-loss-index/career/all/all/) into Excel. I'm not entirely sure which players are included here, there are some good and some bad records so there's a spread of players but I'm not sure whether it's covering "all professional tennis players in the open era" or something more specific.
 
 If I want to compare multiple different sorts of records over many sports, it's going to be necessary to have a consistent scale. Goals per game in football doesn't share a common scale with win rate. And even if we have two different win %ages it might be the case that it's easier to win in tennis than in F1, so the shape of these data are different. To get around this, I've decided to use z scores (or standardised scores) where I've subtracted the mean and divided by the standard deviation. These numbers then represent how far top performers are from average performers accounting for how much variation there is in performance.
@@ -44,13 +46,15 @@ With that in mind, here's a visual looking at the grass, clay and overall win ra
 An interesting stat (to me anyway) I uncovered while building this is that Andy Murray has a better win rate on grass courts than both Pete Sampras and Novak Djokovic. Djokovic ending up with the 6th best all time Clay win rate is also interesting given he's had to deal with overlapping with Nadal.
 
 
+#### Cricket
+
 I've already mentioned Don Bradman's test cricket batting average, so let's move on to look at cricket. Here I found the data on Espncricinfo and filter to all players who have played in at least 10 test matches.
 
 ![Test cricket batting averages](/post/2019-05-22-the-best-records-in-sports_files/cricket.png)
 
 Whereas in tennis you can argue that Bjorn Borg is in the rough region of Nadal's dominance on clay, no one is close to Bradman.
 
-
+#### Formula 1
 
 Moving on to Formula 1, currently we're seeing Lewis Hamilton potentially on course to end his career with the a record number of wins, poles and championships. But if we focus on his per race stats, how does he stack up?
 
@@ -60,6 +64,7 @@ This data was filtered to drivers with at least one win, one pole or one fastest
 
 You can make a case for Hamilton being by far the most statistically successful driver in the modern era, but he falls short of the ridiculous statistics acheived by Fangio, Ascari and Clark. On the subject of Jim Clark, the piece Richard Hammond presented on him in most recent series of the Grand Tour is excellent and worth a watch for F1 fans.
 
+#### Football
 
 Finally, we can move back to football and see how Messi stands out on the same metrics. I've used two different data sources for this, one is a copy of John Burn-Mudroch's data set which sits behind his visualisation which covers 186 of the best goal scores in the top european leagues since 1990. The full definitions can be seen [here](https://johnburnmurdoch.github.io/projects/goal-lines/all-comps/).
 
@@ -72,6 +77,7 @@ It's quite interesting to see the impressive stats of names from the 1940s-1960s
 Here, Messi stands out in the modern era, but depsite the similar distributions for the bulk of players his acheivements aren't as extreme in the context of the history of football. And though Messi does stand relatively alone in the modern era, Cristiano Ronaldo clearly bridges the gap to the rest of the pack as another exceptional performer. This is a bit similar to Bjorn Borg's clay court record in tennis making Nadal look less of an outlier than he otherwise would.
 
 
+#### Putting it all together 
 
 Finally, let's combine the most interesting figures from each sport into one visual and see how everyone stacks up:
 
