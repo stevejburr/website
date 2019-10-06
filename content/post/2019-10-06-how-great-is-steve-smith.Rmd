@@ -1,0 +1,12 @@
+---
+title: How great is Steve Smith?
+author: Steve
+date: '2019-10-06'
+slug: how-great-is-steve-smith
+categories:
+  - Cricket
+  - R
+  - ggplot2
+  - Sports
+tags: []
+---
