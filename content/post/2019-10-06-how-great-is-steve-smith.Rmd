@@ -1,0 +1,399 @@
+---
+title: How great is Steve Smith?
+author: Steve
+date: '2019-10-06'
+slug: how-great-is-steve-smith
+categories:
+  - Cricket
+  - R
+  - ggplot2
+  - Sports
+tags: []
+---
+
+It's now been about a month since the end of the Ashes, which ended a great summer of cricket in England. During that test series, Steve Smith was a constant thorn in England's side, proving almost impossible to get out and scoring a huge number of runs.
+
+His test average now sits firmly in second place on the all time list:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggrepel)
+data <- readRDS("all_records.rds")
+windowsFonts(Raleway="Raleway")
+```
+
+```{r echo=F, message=FALSE, warning=FALSE}
+data %>%
+  group_by(player_name) %>%
+  filter(CumInnings==max(CumInnings)) %>%
+  select(player_name,CumAverage) %>%
+  ungroup() %>%
+  arrange(-CumAverage) %>%
+  mutate(ranking=1:n()) -> average_ranks
+
+average_ranks %>%
+  filter(ranking<=10) %>%
+  mutate(player_name=as_factor(player_name),
+         player_name=fct_reorder(player_name,CumAverage)) %>%
+  ggplot() +
+  geom_col(aes(x=player_name,y=CumAverage),fill="#9b0d0d") +
+  geom_text(aes(x=player_name,y=CumAverage,label=round(CumAverage,1)),hjust="right",colour="white",family="Raleway")+
+  scale_x_discrete("")+
+  scale_y_discrete("Test batting average")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  coord_flip() +
+  labs(caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+```
+
+This is based on the ESPNCricInfo list [here](http://stats.espncricinfo.com/ci/content/records/282910.html).
+
+As I explored in my last post, Bradman's test average is one of the most extreme outliers in sport. It's always fascinated me, and this post will explore how Steve Smith compares.
+
+The first thing I was interested in, was seeing how Smith's average has evolved over time. He's currently the world's best batsman, but he started his test career as a spin bowler which may be counting against him across his whole career.
+
+```{r echo=F, message=FALSE, warning=FALSE}
+data %>% 
+  filter(player_name %in% c("DG Bradman","SPD Smith")) %>%
+  filter(player_name=="SPD Smith") %>%
+  ggplot() +
+  geom_line(aes(x=CumInnings,y=CumAverage,group=player_name),colour="grey50") +
+  scale_x_continuous("Innings Played")+
+  scale_y_continuous("Batting average")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  labs(title="Evolution of Steve Smith's Test Batting Average",caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+  
+```
+
+We can see here that for his first 50 test innings, Smith didn't stand out as a great batsman but since then his average has continually veered upwards towards greatness.
+
+Let's see how this compares to Bradman:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+data %>% 
+  filter(player_name %in% c("DG Bradman","SPD Smith")) %>%
+  ggplot() +
+  geom_line(aes(x=CumInnings,y=CumAverage,group=player_name,colour=player_name)) +
+  geom_hline(aes(yintercept=100),colour="grey50",linetype=2)+
+  scale_x_continuous("Innings Played")+
+  scale_y_continuous("Batting average")+
+  scale_colour_discrete("")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  labs(title="Evolution of Test Batting Averages",
+       subtitle="Steve Smith vs Donald Bradman",
+       caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+```
+
+Now we can see how with current performance, it's unlikely Smith will ever reach the mythical average of 100 but if he continues as is he has a good chance of firmly cementing himself within the gap between the best ever and the mass of other greats. In my last post, it was clear that of the records I had analysed Cricket was most obviously missing a "second greatest" player to fill this gap - the Bjorn Borg clay record compared to Nadal, the Cristiano Ronaldo scoring record compared to Lionel Messi.
+
+For interest, let's add on all the other crickets in the ESPN list of best career averages:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+
+data %>%
+  mutate(line_colour=case_when(
+    player_name=="DG Bradman" ~ "#F8766D",
+    player_name=="SPD Smith" ~ "#00BFC4",
+    TRUE ~ "grey50"
+  )) %>% 
+  left_join((average_ranks %>% select(player_name,ranking)),by="player_name") %>%
+  ggplot() +
+  geom_line(aes(x=CumInnings,y=CumAverage,group=-ranking,colour=line_colour)) +
+  geom_hline(aes(yintercept=100),colour="grey50",linetype=2)+
+    geom_hline(aes(yintercept=50),colour="grey50",linetype=3)+
+  scale_x_continuous("Innings Played")+
+  scale_y_continuous("Batting average",breaks=c(0,50,100,200))+
+  scale_colour_identity("")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  labs(title="Evolution of Test Batting Averages",
+       subtitle="Donald Bradman (red), Steve Smith (blue) vs All Others",
+       caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+
+```
+This highlights that it's quite common for averages to start high and then fall back towards about ~50 the typical value for a very good test batsman. This is an example of regression to the mean, but we also see this going in the other direction where some players start their careers slowly but in the longer term tend towards a very high level. Smith and Bradman fall into this category, but the average performance they tend towards seems to be a level above everyone else.
+
+We can also see from this graph how varied the lengths of the careers of the different batsman are. There are a number of great batsman who continued to play well after they were at the peak of their powers, and so it would be interesting to see how shorter term averages compare. 
+
+Here I'm going to look at 20 innings averages, which is roughly two series and 50 innings average which gives a longer term view.
+
+First let's look at the 20 innings view for Smith and Bradman:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+
+data %>% 
+  filter(player_name %in% c("DG Bradman","SPD Smith")) %>%
+  ggplot() +
+  geom_line(aes(x=CumInnings,y=CumAverage_20,group=player_name,colour=player_name)) +
+  geom_hline(aes(yintercept=100),colour="grey50",linetype=2)+
+  scale_x_continuous("Innings Played")+
+  scale_y_continuous("20 Innings Rolling Batting average")+
+  scale_colour_discrete("")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  labs(title="Rolling 20 Innings Test Batting Average",
+       subtitle="Steve Smith vs Donald Bradman",
+       caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+```
+The most interesting part of this graph for me is that it shows that the form Steve Smith showed in the recent Ashes is potentially not even his best run of form. However, this isn't entirely fair as that 20 innings stretch is either side of period out of the game following his ban for ball tampering.
+
+Let's add in all the players from the top average list, and colour all those who have every exceeded an average of 100 across 20 innings:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+#want to highlight anyone who ever had a 20innings average>100 + get ranks based off of CumAverage_20
+
+data %>%
+  group_by(player_name) %>%
+  summarise(best_20=max(CumAverage_20,na.rm=T),
+         best_50=max(CumAverage_50,na.rm=T)) %>%
+  # mutate(best_20=if_else(best_20==-Inf,0,best_20),
+  #        best_50=if_else(best_50==-Inf,0,best_50)) %>%
+  mutate(rank_20=rank(-best_20),
+         rank_50=rank(-best_50)) -> rolling_ranks
+
+data %>%
+  left_join(rolling_ranks) -> data
+
+data %>%
+  filter(best_20>=100 & best_20==CumAverage_20) %>%
+  distinct(player_name,rank_20,best_20,CumInnings) %>%
+  arrange(rank_20) %>%
+  mutate(line_colour=case_when(
+        player_name=="DG Bradman" ~ "#003f5c",			
+    player_name=="S Chanderpaul" ~ "#2f4b7c",		
+    player_name=="A Flower" ~ "#665191",	
+    player_name=="KC Sangakkara" ~ "#a05195",			
+    player_name=="Mohammad Yousuf" ~ "#d45087",	
+    player_name=="SR Waugh" ~ "#f95d6a",	
+    player_name=="GS Sobers" ~ "#ff7c43",			
+    player_name=="SPD Smith" ~ "#ffa600"))-> labels_20
+
+data %>%
+  mutate(line_colour=case_when(
+    player_name=="DG Bradman" ~ "#003f5c",			
+    player_name=="S Chanderpaul" ~ "#2f4b7c",		
+    player_name=="A Flower" ~ "#665191",	
+    player_name=="KC Sangakkara" ~ "#a05195",			
+    player_name=="Mohammad Yousuf" ~ "#d45087",	
+    player_name=="SR Waugh" ~ "#f95d6a",	
+    player_name=="GS Sobers" ~ "#ff7c43",			
+    player_name=="SPD Smith" ~ "#ffa600",
+    TRUE ~ "grey50")) %>%
+  ggplot() +
+  geom_line(aes(x=CumInnings,y=CumAverage_20,group=-rank_20,colour=line_colour)) +
+  geom_hline(aes(yintercept=100),colour="grey50",linetype=2)+
+  geom_text_repel(data=labels_20,
+            aes(y=best_20,x=CumInnings,colour=line_colour,label=player_name))+
+  scale_x_continuous("Innings Played")+
+  scale_y_continuous("20 Innings Rolling Batting average")+
+  scale_colour_identity("")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  labs(title="Evolution of 20 Innings Rolling Averages",
+       caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+```
+
+This makes Bradman's greatness clear - several batsman have had peak performances of a similar level, but very few acheive it on multiple occasions and no others maintain this level for more than a handful of games.
+
+If we are just interested in the relative levels of peak performance, we can simplify this visual:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+data %>%
+  filter(rank_20<=10 & best_20==CumAverage_20) %>%
+  distinct(player_name,rank_20,best_20,CumInnings) %>%
+  mutate(player_name=as_factor(player_name),
+         player_name=fct_reorder(player_name,best_20)) %>%
+  ggplot() +
+  geom_col(aes(x=player_name,y=best_20),fill="#9b0d0d") +
+  geom_text(aes(x=player_name,y=best_20,label=round(best_20,1)),hjust="right",colour="white",family="Raleway")+
+  scale_x_discrete("")+
+  scale_y_discrete("Best 20 innings rolling test batting average")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  coord_flip() +
+  labs(caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+```
+
+Now, let's move on to a slightly longer term view and look at the 50 innings averages:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+data %>% 
+  filter(player_name %in% c("DG Bradman","SPD Smith")) %>%
+  ggplot() +
+  geom_line(aes(x=CumInnings,y=CumAverage_50,group=player_name,colour=player_name)) +
+  geom_hline(aes(yintercept=100),colour="grey50",linetype=2)+
+  geom_hline(aes(yintercept=75),colour="grey50",linetype=3)+
+  scale_x_continuous("Innings Played")+
+  scale_y_continuous("50 Innings Rolling Batting average")+
+  scale_colour_discrete("")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  labs(title="Rolling 50 Innings Test Batting Average",
+       subtitle="Steve Smith vs Donald Bradman",
+       caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+```
+
+Again, Bradman's consistent dominance becomes clear with this longer term metric, but Smith has been consistently around the 75 mark, how does this rank vs all the other great batsmen?
+
+
+```{r echo=F, message=FALSE, warning=FALSE}
+data %>%
+  filter(best_50>=75 & best_50==CumAverage_50) %>%
+  distinct(player_name,rank_50,best_50,CumInnings) %>%
+  arrange(rank_50) %>%
+  mutate(line_colour=case_when(
+    player_name=="DG Bradman" ~ "#003f5c",			
+    player_name=="JH Kallis" ~ "#2f4b7c",		
+    player_name=="SR Waugh" ~ "#665191",	
+    player_name=="SPD Smith" ~ "#a05195",			
+    player_name=="KC Sangakkara" ~ "#d45087",	
+    player_name=="RT Ponting" ~ "#f95d6a",	
+    player_name=="A Flower" ~ "#ff7c43",			
+    player_name=="WR Hammond" ~ "#ffa600",
+    TRUE ~ "grey50")) -> labels_50
+
+data %>%
+  mutate(line_colour=case_when(
+    player_name=="DG Bradman" ~ "#003f5c",			
+    player_name=="JH Kallis" ~ "#2f4b7c",		
+    player_name=="SR Waugh" ~ "#665191",	
+    player_name=="SPD Smith" ~ "#a05195",			
+    player_name=="KC Sangakkara" ~ "#d45087",	
+    player_name=="RT Ponting" ~ "#f95d6a",	
+    player_name=="A Flower" ~ "#ff7c43",			
+    player_name=="WR Hammond" ~ "#ffa600",
+    TRUE ~ "grey50")) %>%
+  ggplot() +
+  geom_line(aes(x=CumInnings,y=CumAverage_50,group=-rank_50,colour=line_colour)) +
+  geom_hline(aes(yintercept=100),colour="grey50",linetype=2)+
+  geom_hline(aes(yintercept=75),colour="grey50",linetype=3)+
+  geom_text_repel(data=labels_50,
+            aes(y=best_50,x=CumInnings,colour=line_colour,label=player_name))+
+  scale_x_continuous("Innings Played")+
+  scale_y_continuous("Batting average")+
+  scale_colour_identity("")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  labs(title="Evolution of 50 Innings Rolling Averages",
+       caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+```
+
+In this context, we can see that Smith's consistency of being close to a rolling average of 75 for a lot of his career begins to stand out. But he is not alone in this consistency.
+
+Only 8 Batsman have acheived this based on those in this dataset, and on this metric Smith's peak starts to move closer to the top of the rankings, but he still only reaches 4th place.
+
+
+```{r echo=F, message=FALSE, warning=FALSE}
+data %>%
+  filter(rank_50<=10 & best_50==CumAverage_50) %>%
+  distinct(player_name,rank_50,best_50,CumInnings) %>%
+  mutate(player_name=as_factor(player_name),
+         player_name=fct_reorder(player_name,best_50)) %>%
+  ggplot() +
+  geom_col(aes(x=player_name,y=best_50),fill="#9b0d0d") +
+  geom_text(aes(x=player_name,y=best_50,label=round(best_50,1)),hjust="right",colour="white",family="Raleway")+
+  scale_x_discrete("")+
+  scale_y_discrete("Best 50 innings rolling test batting average")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  coord_flip() +
+  labs(caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+```
+
+The 50 innings average begins to cover consistent brilliance, but as we have already started to touch on, it's interesting to see how long this consistent high level can be maintained.
+
+Let's take this further and look at how many innings each player has managed to keep their 50 innings average above the 75 figure:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+data %>%
+  group_by(player_name) %>%
+  filter(CumAverage_50>=75) %>%
+  summarise(count=n()) %>%
+  mutate(player_name=as.factor(player_name),
+         player_name=fct_reorder(player_name,count)) %>%
+   ggplot() +
+  geom_col(aes(x=player_name,y=count),fill="#9b0d0d") +
+  geom_text(aes(x=player_name,y=count,label=round(count,1)),hjust="right",colour="white",family="Raleway")+
+  scale_x_discrete("")+
+  scale_y_discrete("Number of innings with a 50 innings average >=75")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  coord_flip() +
+  labs(caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+  
+
+```
+
+So at this point in his career, Smith is in and amongst the greats, but does not stand alone in 2nd place as he does based off of his current average.
+
+In conclusion, based on different ways of looking at batting averages, we can be confident that Steve Smith is in the top handful of greatest batsmen to play Test cricket. His periods of peak performance have been close to the best statistics we've ever seen, and he has maintained a level close to this peak for an extended period of time.
+
+This is impressive, but not unique. From this data, what stands out most to me is that his career average is still trending upwards well after the point where most players start to tend towards an average value. The fact that his average still looks to be on a firm upward trajectory despite being the second highest ever is the most impressive part of his record. It will be fascinating what happens over the next few years.
+
+I'll finish with a final chart to show this trend, looking at those who have batted as many times as Smith and highlighting those who had the biggest increase in their batting average from their 75th to 124th innings:
+
+```{r echo=F, message=FALSE, warning=FALSE}
+
+data %>%
+  group_by(player_name) %>%
+  filter(CumInnings==75 | CumInnings==100 | CumInnings==124) %>%
+  select(player_name,CumInnings,CumAverage) %>%
+  spread(key=CumInnings,value=CumAverage) -> data_wide
+  
+data_wide <- data_wide[complete.cases(data_wide),]
+
+# data_wide %>%
+#   filter(`100`>`75` & `124` > `100`) %>%
+#   arrange(-`124`/`75`)
+
+data_wide %>%
+    mutate(line_colour=case_when(
+    player_name=="SPD Smith" ~ "#003f5c",			
+    player_name=="SR Waugh" ~ "#2f4b7c",		
+    player_name=="RT Ponting" ~ "#665191",	
+    player_name=="JH Kallis" ~ "#a05195",			
+    player_name=="AB de Villiers" ~ "#d45087",	
+    player_name=="V Kohli" ~ "#f95d6a",	
+    player_name=="KF Barrington" ~ "#ff7c43",			
+    player_name=="SR Tendulkar" ~ "#ffa600",
+    TRUE ~ "grey50")) -> data_wide
+
+data_wide %>%
+  ggplot(aes(colour=line_colour)) +
+  geom_segment(aes(x=75,y=`75`,xend=100,yend=`100`)) +
+  geom_segment(aes(xend=124,yend=`124`,x=100,y=`100`)) +
+  geom_text_repel(data=(data_wide %>% filter(line_colour!="grey50")),
+                  aes(x=125,y=`124`,label=player_name),
+                  direction="y",
+                  hjust="left") +
+  scale_colour_identity() +
+  scale_x_continuous("Innings played",breaks=c(75,100,124),limits=c(75,130)) +
+  scale_y_continuous("Test Batting Average")+
+  theme_minimal(base_family = "Raleway") +
+  theme(panel.grid=element_blank(),
+        text=element_text(colour="grey50")) +
+  labs(title="Smith's average is incredible, and still getting better!",
+       subtitle="Filtered to top averaging players who reached at least 124 Innings",
+       caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
+
+
+```
+
+##### Other reading:
+
+- [A good write up of Smith's brilliant Ashes statistics](https://www.news18.com/cricketnext/news/ashes-2019-in-numbers-steve-smiths-herculean-efforts-put-him-in-a-league-of-his-own-2311285.html)
+- [Gwilym Lockwood looked at the same sort of data in this twitter thread](https://twitter.com/GwilymLockwood/status/1170978885942616065)
+- [The code I used to download and process this data is on GitHub](https://github.com/stevejburr/Smith-and-Bradman)
