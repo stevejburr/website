@@ -312,7 +312,7 @@ data %>%
   labs(caption="Design & analysis by @stevejburr - Data from ESPNCricInfo")
 ```
 
-The 50 innings average begins to cover consistent brilliance, but as we have already started to touch on, it's interesting to see how long this conistent high level can be maintained.
+The 50 innings average begins to cover consistent brilliance, but as we have already started to touch on, it's interesting to see how long this consistent high level can be maintained.
 
 Let's take this further and look at how many innings each player has managed to keep their 50 innings average above the 75 figure:
 
@@ -339,7 +339,7 @@ data %>%
 
 So at this point in his career, Smith is in and amongst the greats, but does not stand alone in 2nd place as he does based off of his current average.
 
-In conclusion, based on different ways of looking at batting averages, we can be confident that Steve Smith is in the top handful of greatest batsmen to play Test cricket. His periods of peak performance have been close to the best statistics we've ever seen, and his he has maintained a level close to this peak for an extended period of time.
+In conclusion, based on different ways of looking at batting averages, we can be confident that Steve Smith is in the top handful of greatest batsmen to play Test cricket. His periods of peak performance have been close to the best statistics we've ever seen, and he has maintained a level close to this peak for an extended period of time.
 
 This is impressive, but not unique. From this data, what stands out most to me is that his career average is still trending upwards well after the point where most players start to tend towards an average value. The fact that his average still looks to be on a firm upward trajectory despite being the second highest ever is the most impressive part of his record. It will be fascinating what happens over the next few years.
 
