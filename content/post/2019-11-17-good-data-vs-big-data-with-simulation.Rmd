@@ -1,0 +1,69 @@
+---
+title: Good data vs Big Data with Simulation
+author: Steve
+date: '2019-11-17'
+slug: good-data-vs-big-data-with-simulation
+categories:
+  - Statistics
+  - R
+tags: []
+---
+
+I recently came across the paper "STATISTICAL PARADISES AND PARADOXES IN BIG DATA (I): LAW OF LARGE POPULATIONS, BIG DATA PARADOX, AND THE 2016 US PRESIDENTIAL ELECTION" BY *XIAO-LI MENG* as a result of this tweet:
+
+```{r echo=FALSE}
+blogdown::shortcode('tweet', '1190785090512506881')
+```
+
+The central finding, is that when you have a sample of data from a population from which you are trying to measure something, then the error in that measurement can be decomposed into:
+
+- *A data quality measure* which reflects the bias of the data, e.g. are people who respond a certain way more likely to agree to be in the sample
+- *A data quantity measure*, the more data the better
+- *The difficulty of the problem* e.g. the standard deviation in what you are  trying to measure.
+
+Generally data practicioners have focussed on the second point, and forgotten about the former. The paper warns that in the age of big data, having samples which are say 80% of the population isn't enough to guarantee good measurements and that forgetting this will lead to making the wrong conclusions.
+
+I'd recommend you read the full paper for all the details, this post stays away from mathematical rigour but trys to show and explain some of the findings from the paper using some fairly simple simulation data.
+
+
+
+```{r warning=F, message=F}
+library(tidyverse)
+library(furrr)
+library(here)
+windowsFonts(Raleway="Raleway")
+
+```
+
+```{r echo=F}
+
+set.seed(123)
+
+total_pop <- 1000000
+prop_a <- 0.5
+prop_b <- 1-prop_a
+
+
+
+population_a <- rnorm(total_pop*prop_a,mean=10,sd=5)
+population_b <- rnorm(total_pop*prop_b,mean=10*1.4,sd=5)
+
+
+measurable_variable_a <- rbinom(total_pop*prop_a,1,0.8)
+measurable_variable_b <- rbinom(total_pop*prop_a,1,0.2)
+
+prop_measurable_variable_total <- sum(measurable_variable_a,measurable_variable_b) / total_pop
+
+data <- rbind(data.frame(mean=population_a,group="a", measurable_variable=measurable_variable_a, stringsAsFactors = F),
+              data.frame(mean=population_b,group="b", measurable_variable=measurable_variable_b, stringsAsFactors = F))
+
+
+# extract previously run simulations (slow)
+all_outputs <- readRDS(here("content","post","all_outputs.rds"))
+
+```
+
+
+```{r}
+
+```
