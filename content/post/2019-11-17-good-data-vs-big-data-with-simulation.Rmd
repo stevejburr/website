@@ -15,7 +15,7 @@ I recently came across the paper "STATISTICAL PARADISES AND PARADOXES IN BIG DAT
 blogdown::shortcode('tweet', '1190785090512506881')
 ```
 
-The central finding, is that when you have a sample of data from a population from which you are trying to measure something, then the error in that measurement can be decomposed into:
+The central finding is that when you have a sample of data from a population from which you are trying to measure something, then the error in that measurement can be decomposed into:
 
 - *A data quality measure* which reflects the bias of the data, e.g. are people who respond a certain way more likely to agree to be in the sample
 - *A data quantity measure*, the more data the better
@@ -83,7 +83,7 @@ data %>%
 
 We can see that we have an approximately normally distributed variable, with a mean of `r mean(data$mean)`. In most real examples, we wouldn't be able to create this plot as we wouldn't have access to data on the whole population.
 
-One approach to understand this data set would be take a random sample. If you can guarantee a true random sample (there is no response bias or other bias in your collection methodology) then this is a very effective approach. As explained in the paper, truly random sampling will dramatically increase your ability to accurately measure the quantity of interest.
+One approach to understand this data set would be to take a random sample. If you can guarantee a true random sample (there is no response bias or other bias in your collection methodology) then this is a very effective approach. As explained in the paper, truly random sampling will dramatically increase your ability to accurately measure the quantity of interest.
 
 If we take a random sample of 1,000 from our population of 1,000,000 and calculate the mean value of our quantity of interest as well as standard 95% confidence intervals we get the following:
 
@@ -200,7 +200,7 @@ all_outputs %>%
 
 In the real world we often would not be able to directly measure the factors which cause a sampling or response bias. We often can measure a number of factors but these might not be a perfect way of unpicking the biases in our data. For example, if we have a sample of people we may know a number of "demographic" factors about these people such as their age or location, and while these factors may be correlated with what we want to measure (e.g. how profitable they are likely to be as a customer) and whether the individuals are in our convenience sample (how likely they are to consent to their data being collected) these factors won't entirely explain the former or perfectly allow us to unpick the latter.
 
-For this example, let's imagine that we can't ever measure the "group membership" which defines how the data is generated, so we cannot actually weight to it. But we do have access to another binary variable, which we know is correlated with group membership. 
+For this example, let's imagine that we can't ever measure the "group membership" which defines how the data is generated, so we cannot actually weight based on this factor. But we do have access to another binary variable, which we know is correlated with group membership. 
 
 As we have the population data, we can see the following:
 

@@ -13,7 +13,7 @@ tags: []
 
 <p>I recently came across the paper “STATISTICAL PARADISES AND PARADOXES IN BIG DATA (I): LAW OF LARGE POPULATIONS, BIG DATA PARADOX, AND THE 2016 US PRESIDENTIAL ELECTION” BY <em>XIAO-LI MENG</em> as a result of this tweet:</p>
 {{% tweet "1190785090512506881" %}}
-<p>The central finding, is that when you have a sample of data from a population from which you are trying to measure something, then the error in that measurement can be decomposed into:</p>
+<p>The central finding is that when you have a sample of data from a population from which you are trying to measure something, then the error in that measurement can be decomposed into:</p>
 <ul>
 <li><em>A data quality measure</em> which reflects the bias of the data, e.g. are people who respond a certain way more likely to agree to be in the sample</li>
 <li><em>A data quantity measure</em>, the more data the better</li>
@@ -30,7 +30,7 @@ windowsFonts(Raleway=&quot;Raleway&quot;)</code></pre>
 <p>Let’s first visualise what the population quantity we are trying to measure looks like:</p>
 <p><img src="/post/2019-11-17-good-data-vs-big-data-with-simulation_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>We can see that we have an approximately normally distributed variable, with a mean of 11.9973928. In most real examples, we wouldn’t be able to create this plot as we wouldn’t have access to data on the whole population.</p>
-<p>One approach to understand this data set would be take a random sample. If you can guarantee a true random sample (there is no response bias or other bias in your collection methodology) then this is a very effective approach. As explained in the paper, truly random sampling will dramatically increase your ability to accurately measure the quantity of interest.</p>
+<p>One approach to understand this data set would be to take a random sample. If you can guarantee a true random sample (there is no response bias or other bias in your collection methodology) then this is a very effective approach. As explained in the paper, truly random sampling will dramatically increase your ability to accurately measure the quantity of interest.</p>
 <p>If we take a random sample of 1,000 from our population of 1,000,000 and calculate the mean value of our quantity of interest as well as standard 95% confidence intervals we get the following:</p>
 <pre><code>##     CI_lwr     Mean   CI_upr
 ## 1 11.61331 11.95495 12.29658</code></pre>
@@ -50,7 +50,7 @@ windowsFonts(Raleway=&quot;Raleway&quot;)</code></pre>
 <p>Because we know the data generation process, we could create weights to get the correct proportions. Using multiple simulated samples to understand the uncertainty in our measurement (instead of relying on confidence intervals) we see that this is effective:</p>
 <p><img src="/post/2019-11-17-good-data-vs-big-data-with-simulation_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>In the real world we often would not be able to directly measure the factors which cause a sampling or response bias. We often can measure a number of factors but these might not be a perfect way of unpicking the biases in our data. For example, if we have a sample of people we may know a number of “demographic” factors about these people such as their age or location, and while these factors may be correlated with what we want to measure (e.g. how profitable they are likely to be as a customer) and whether the individuals are in our convenience sample (how likely they are to consent to their data being collected) these factors won’t entirely explain the former or perfectly allow us to unpick the latter.</p>
-<p>For this example, let’s imagine that we can’t ever measure the “group membership” which defines how the data is generated, so we cannot actually weight to it. But we do have access to another binary variable, which we know is correlated with group membership.</p>
+<p>For this example, let’s imagine that we can’t ever measure the “group membership” which defines how the data is generated, so we cannot actually weight based on this factor. But we do have access to another binary variable, which we know is correlated with group membership.</p>
 <p>As we have the population data, we can see the following:</p>
 <pre><code>## # A tibble: 2 x 2
 ##   group `Proportion with 1`
