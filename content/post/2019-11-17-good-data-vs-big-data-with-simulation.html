@@ -64,27 +64,6 @@ windowsFonts(Raleway=&quot;Raleway&quot;)</code></pre>
 <p>This helps make the results slightly better, but we are still under estimating the true mean and being over confident in our estimates due to the large sample.</p>
 <p>By going through some relatively simple simulations, we have shown results which are inline with the paper whereby we see that a very large but biased sample gives results which are arguable less useful than a much smaller random sample, and that depending on what we can measure and weight to that weighting may not always be enough to fix the problem.</p>
 <p>Let’s wrap up this post by looking at a few different simulated scenarios. The example above has a sample of 800,000 from the population of 1,000,000 where “group b” has a lower mean but each member is 0.7x less likely to be included in the sample. We can create a few different simulations with different assumptions and show the raw means:</p>
-<pre class="r"><code>all_outputs %&gt;%
-  filter(experiment %in% c(&quot;w2_500&quot;,&quot;w2_800&quot;,&quot;w5_500&quot;,&quot;w5_800&quot;,&quot;wn_1&quot;)) %&gt;%
-  mutate(experiment = case_when(
-    experiment == &quot;wn_1&quot; ~ &quot;1. Random Sample 1k&quot;,
-    experiment == &quot;w5_800&quot; ~ &quot;2. Sample:800k Bias:70%&quot;,
-    experiment == &quot;w5_500&quot; ~ &quot;3. Sample:500k Bias:70%&quot;,
-    experiment == &quot;w2_800&quot; ~ &quot;4. Sample:800k Bias:95%&quot;,
-    experiment == &quot;w2_500&quot; ~ &quot;5. Sample:500k Bias:95%&quot;
-  ),
-  experiment=as.factor(experiment),
-  experiment=fct_rev(experiment)) %&gt;%
-  ggplot(aes(x=experiment,y=raw_mean)) +
-  geom_boxplot() +
-  geom_hline(aes(yintercept=true_mean),colour=&quot;grey50&quot;,linetype=2) +
-  scale_y_continuous(&quot;&quot;)+
-  scale_x_discrete(&quot;&quot;) +
-  theme_minimal(base_family = &quot;Raleway&quot;) +
-  theme(panel.grid=element_blank()) +
-  labs(title=&quot;Even only moderate sample bias can lead to inaccuracy&quot;,
-       subtitle=&quot;Shrinking the sample size makes things worse.\nPlot shows 1000 potential samples for each set up&quot;) +
-  coord_flip()</code></pre>
 <p><img src="/post/2019-11-17-good-data-vs-big-data-with-simulation_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <p>My goal in this post was to try and simulate some data to explore the impact of biased sampling on the accuracy of measurement. Without getting into lots of detail, the findings seem to be consistent with the paper - having a lot of data isn’t enough to ensure that you can accurately measure something and it may actually mislead you if you treat biased data as if it is a random sample. Additionally, we can see some of the challenges in trying to make biased data look representative, if you can’t accurately measure the sources of bias then you cannot correct for them.</p>
 <p>None of these topics are new, but it’s easy to forget about or underestimate the importance of random sampling when working with data, and it’s always good to be reminded to take more care about thinking what a data set really represents and what conclusions you can safely make from it.</p>
