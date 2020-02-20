@@ -1,0 +1,255 @@
+---
+title: Tidy Tuesday - 18-02-2020
+author: Steve
+date: '2020-02-20'
+slug: tidy-tuesday-18-02-2020
+categories:
+  - TidyTuesday
+  - R
+  - ggplot2
+tags: []
+---
+
+
+
+<p>It’s been quite a while since I took part in Tidy Tuesday, and this one is slightly late in the week but good to get back into the habbit of doing some different analysis outside of work.</p>
+<p>The rest of this post will be pretty much a record of what I was thinking as I did my initial analysis. Hoping to spend an hour or two on this in total and see where I end up…</p>
+<div id="read-in-the-data" class="section level2">
+<h2>Read in the data:</h2>
+<p>Following the guidelines from the official repo, I can grab the data using the <code>tidytuedayR</code> package - see <a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-02-18/readme.md">here</a></p>
+<pre class="r"><code># Install the tidytuesday package to get the data:
+# devtools::install_github(&quot;thebioengineer/tidytuesdayR&quot;)
+library(tidytuesdayR)
+library(tidyverse)
+
+dat &lt;- tidytuesdayR::tt_load(&#39;2020-02-18&#39;)$food_consumption</code></pre>
+<p>First take a look at the first few rows of the file:</p>
+<pre class="r"><code>head(dat)</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   country   food_category consumption co2_emmission
+##   &lt;chr&gt;     &lt;chr&gt;               &lt;dbl&gt;         &lt;dbl&gt;
+## 1 Argentina Pork                10.5          37.2 
+## 2 Argentina Poultry             38.7          41.5 
+## 3 Argentina Beef                55.5        1712   
+## 4 Argentina Lamb &amp; Goat          1.56         54.6 
+## 5 Argentina Fish                 4.36          6.96
+## 6 Argentina Eggs                11.4          10.5</code></pre>
+<p>This looks like it is a nicely formatted table, containing values of “consumption” and “co2 emmission” split by country and food type.</p>
+<p>Referring to the tidytuesday data dictionary, it looks like these are per person figures based on typical consumption patterns by country. Looking at the <a href="https://www.nu3.de/blogs/nutrition/food-carbon-footprint-index-2018">original data source</a> we can see that the food category CO2 values are based on global median values. There is some more detail on this on the website, and it’s a reasonable approach to take. However, it’s important to think about what this means for how you use and interpet the data. Whenever stats around the pros/cons of meat vs plant based diets you can get some pretty different results based on the methodologies used, and it’s pretty common for people to pick the data source which best fits their agenda.</p>
+<p>Generally, you tend to see that eating beef is pretty bad for the environment, but you can get some pretty different figures depending on what is included in the carbon footprint figures (e.g. clearing rainforest to replace it with cattle pasture is doubly bad) and using averages will make some countries look better/worse than they are in reality.</p>
+<p>It’s also worth keeping in mind that there’s more to think about than just CO2, and the overall impact at a topline level may not be the same as the local impacts. For example, almond farming in California is very water intensive in an area which suffers from droughts and is seemingly having a negative impact on the insect population in that part of the world meaning replacing dairy with almond milk isn’t without consequences even if at a topline level it’s much better from a water consumption and CO2 perspective to do so (conversely continue to use local dairy products if you live in Northern Europe might be worse overall but might have a much smaller impact on the immediate local area in the short term).</p>
+<p>Let’s get back to the data - based on what I’ve read of the data, I’d expect to be able to divide the two numeric columns and then see consistent values for each food in every country:</p>
+<pre class="r"><code>dat %&gt;%
+  mutate(co2_per_kg=co2_emmission/consumption) %&gt;%
+  arrange(food_category,co2_per_kg) %&gt;%
+  head()</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   country    food_category consumption co2_emmission co2_per_kg
+##   &lt;chr&gt;      &lt;chr&gt;               &lt;dbl&gt;         &lt;dbl&gt;      &lt;dbl&gt;
+## 1 India      Beef                 0.81          25.0       30.9
+## 2 Sri Lanka  Beef                 1.38          42.6       30.9
+## 3 Mozambique Beef                 1.04          32.1       30.9
+## 4 Togo       Beef                 1.53          47.2       30.9
+## 5 Gambia     Beef                 2.16          66.6       30.9
+## 6 Bulgaria   Beef                 3.84         118.        30.9</code></pre>
+<p>We do indeed seem to get the same value, so I can be happy I’ve understood the data dictionary.</p>
+</div>
+<div id="first-graph---country-level-differences" class="section level2">
+<h2>First graph - country level differences</h2>
+<p>As the data is presented here, the most interesting metric is probably the CO2 emmissions. This is measured in kg/person/year.</p>
+<p>Let’s take a look at how this varies by country at an overall level:</p>
+<pre class="r"><code>dat %&gt;%
+  group_by(country) %&gt;%
+  summarise(co2_emmission=sum(co2_emmission)) %&gt;%
+  mutate(country=as.factor(country),
+         country=fct_reorder(country,co2_emmission)) %&gt;%
+  arrange(co2_emmission) -&gt; co2_emmission_by_country</code></pre>
+<p>Now we have this table, we can print out the top and bottom 10 rows to see which countries appear where:</p>
+<pre class="r"><code>head(co2_emmission_by_country,10)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    country    co2_emmission
+##    &lt;fct&gt;              &lt;dbl&gt;
+##  1 Mozambique          141.
+##  2 Rwanda              182.
+##  3 Togo                188.
+##  4 Liberia             203.
+##  5 Malawi              208.
+##  6 Ghana               218.
+##  7 Zambia              225.
+##  8 Ethiopia            242.
+##  9 Congo               263.
+## 10 Nigeria             268.</code></pre>
+<pre class="r"><code>tail(co2_emmission_by_country,10)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    country     co2_emmission
+##    &lt;fct&gt;               &lt;dbl&gt;
+##  1 Kazakhstan          1575.
+##  2 Luxembourg          1598.
+##  3 Brazil              1617.
+##  4 Uruguay             1635.
+##  5 USA                 1719.
+##  6 Iceland             1731.
+##  7 New Zealand         1751.
+##  8 Albania             1778.
+##  9 Australia           1939.
+## 10 Argentina           2172.</code></pre>
+<p>We can see that there are a lot of African countries with low emissions per capita, and a slightly more geographically spread out set of (mostly) richer countries at the top end of emissions per capita.</p>
+<p>We can visualise these two sets of results using a bar graph:</p>
+<pre class="r"><code>windowsFonts(Raleway=&quot;Raleway&quot;)
+
+rbind(head(co2_emmission_by_country,10),tail(co2_emmission_by_country,10)) %&gt;%
+  ggplot() +
+  geom_col(aes(x=country,y=co2_emmission)) +
+  coord_flip() +
+  theme_minimal(base_family = &quot;Raleway&quot;)+
+  theme(panel.grid=element_blank(),
+        text=element_text(colour=&quot;grey50&quot;)) +
+  labs(x=&quot;&quot;,
+       y=&quot;CO2 Emissions from Food\nkg per Person per Year&quot;,
+       caption=&quot;Design @stevejburr - Data source: nu3.de - #tidytuesday&quot;,
+       title=&quot;Per capita CO2 emissions from food vary greatly by country&quot;) </code></pre>
+<p><img src="/post/2020-02-20-tidy-tuesday-18-02-2020_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>It might also be interesting to get a sense of the distribution of emissions by country -</p>
+<pre class="r"><code>co2_emmission_by_country %&gt;%
+  ggplot() +
+  geom_histogram(aes(x=co2_emmission),
+                 binwidth = 100,
+                 fill=&quot;#9b0d0d&quot;) +
+  geom_jitter(aes(x=co2_emmission,y=1),height=1,width=0,
+              colour=&quot;grey50&quot;) +
+  theme_minimal(base_family = &quot;Raleway&quot;)+
+  theme(panel.grid=element_blank(),
+        text=element_text(colour=&quot;grey50&quot;),
+        axis.text.y=element_blank()) +
+  labs(x=&quot;CO2 Emissions from Food\nkg per Person per Year&quot;,
+       y=&quot;&quot;,
+       caption=&quot;Design @stevejburr - Data source: nu3.de - #tidytuesday&quot;,
+       title=&quot;Per capita CO2 emissions from food vary greatly by country&quot;,
+       subtitle=&quot;There a small number of particularly bad countries&quot;) </code></pre>
+<p><img src="/post/2020-02-20-tidy-tuesday-18-02-2020_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="understanding-what-drives-country-variation" class="section level2">
+<h2>Understanding what drives country variation:</h2>
+<p>Given that the values used for each food are the same by country in this dataset, then the mix and amount of food consumed must drive all of the differences (this is still likely to be the case even if per country food figures were available).</p>
+<p>First, let’s look at total kgs of food per person by country, and see how this is correlated with total CO2 emissions:</p>
+<pre class="r"><code>dat %&gt;%
+  group_by(country) %&gt;%
+  summarise(consumption=sum(consumption)) %&gt;%
+  left_join(co2_emmission_by_country,by=&quot;country&quot;) %&gt;%
+  ggplot(aes(x=consumption,y=co2_emmission)) +
+  geom_point(colour=&quot;grey50&quot;) +
+  geom_smooth(method=&quot;lm&quot;,se=FALSE,colour=&quot;#9b0d0d&quot;) +
+  theme_minimal(base_family = &quot;Raleway&quot;)+
+  theme(panel.grid=element_blank(),
+        text=element_text(colour=&quot;grey50&quot;),
+        axis.text.y=element_blank()) +
+  labs(x=&quot;Total kg Food per Person Per Year&quot;,
+       y=&quot;CO2 Emissions from Food\nkg per Person per Year&quot;,
+       caption=&quot;Design @stevejburr - Data source: nu3.de - #tidytuesday&quot;,
+       title=&quot;A lot of the variation in emissions can be explained by total consumption&quot;,
+       subtitle=&quot;But the relationship isn&#39;t perfect, mix must play a part&quot;) </code></pre>
+<p><img src="/post/2020-02-20-tidy-tuesday-18-02-2020_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>To understand mix, let’s look at % of consumption by food type (in kgs):</p>
+<pre class="r"><code>dat %&gt;%
+  group_by(country) %&gt;%
+  mutate(percent=consumption/sum(consumption)) %&gt;%
+  select(country,food_category,percent) %&gt;%
+  left_join(co2_emmission_by_country,by=&quot;country&quot;) -&gt; mix_data
+
+mix_data %&gt;%
+  group_by(food_category) %&gt;%
+  summarise(r2=cor(percent,co2_emmission)^2) %&gt;%
+  mutate(title=paste0(food_category,&quot;\nR2:&quot;,scales::number(r2,accuracy=0.01))) %&gt;%
+  inner_join(mix_data,by=&quot;food_category&quot;) %&gt;%
+  ggplot(aes(x=percent,y=co2_emmission))+
+  geom_point(colour=&quot;grey50&quot;)+
+  geom_smooth(method=&quot;lm&quot;,se=FALSE,colour=&quot;#9b0d0d&quot;)+
+  facet_wrap(title~.,scale=&quot;free_x&quot;) +
+  theme_minimal(base_family = &quot;Raleway&quot;)+
+  theme(panel.grid=element_blank(),
+        text=element_text(colour=&quot;grey50&quot;),
+        axis.text.y=element_blank()) +
+  labs(x=&quot;% of Food Consumed&quot;,
+       y=&quot;CO2 Emissions from Food\nkg per Person per Year&quot;,
+       caption=&quot;Design @stevejburr - Data source: nu3.de - #tidytuesday&quot;,
+       title=&quot;The importance of Beef, Milk and Rice in diets explains a lot of the variation&quot;,
+       subtitle=&quot;In addition to the differences in volumes consumed&quot;) </code></pre>
+<p><img src="/post/2020-02-20-tidy-tuesday-18-02-2020_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+<div id="ranking-the-factors" class="section level2">
+<h2>Ranking the factors</h2>
+<p>We can use models to try and understand how much of the variation in the data can be explained by the variables we have explored here.</p>
+<p>We can use a linear regression model as a simple approach to understand the degree of variability explained by a subset of the variables:</p>
+<pre class="r"><code>mix_data %&gt;%
+  filter(food_category %in% c(&quot;Beef&quot;,&quot;Milk - inc. cheese&quot;,&quot;Rice&quot;)) %&gt;%
+  pivot_wider(values_from=percent, names_from=food_category) -&gt; model_data
+
+dat %&gt;%
+  group_by(country) %&gt;%
+  summarise(consumption=sum(consumption)) %&gt;%
+  left_join(model_data,by=&quot;country&quot;) %&gt;%
+  select(-country) %&gt;%
+  lm(co2_emmission ~ .,data=.) %&gt;%
+  summary()</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = co2_emmission ~ ., data = .)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -348.41  -75.04  -16.89   53.71  590.27 
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)          -493.4477    64.7925  -7.616 5.61e-12 ***
+## consumption             2.9984     0.1214  24.706  &lt; 2e-16 ***
+## Beef                 9444.3706   517.4324  18.252  &lt; 2e-16 ***
+## `Milk - inc. cheese`  -58.2620   122.2255  -0.477   0.6344    
+## Rice                  219.9463   108.9410   2.019   0.0456 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 143.2 on 125 degrees of freedom
+## Multiple R-squared:  0.9045, Adjusted R-squared:  0.9014 
+## F-statistic:   296 on 4 and 125 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>This model suggests that we can explain ~90% of the variation between countries CO2 per capita food emissions based off of total consumption levels and then the proportion of volume coming from Beef, Dairy and Rice.</p>
+<p>Another approach is to use importance plots to rank the variables, these plots are provided by many modelling packages such as <code>randomForest</code>:</p>
+<pre class="r"><code>library(randomForest)
+
+mix_data %&gt;%
+  pivot_wider(values_from=percent, names_from=food_category,
+              names_repair =&quot;universal&quot;) -&gt; rf_data
+
+dat %&gt;%
+  group_by(country) %&gt;%
+  summarise(consumption=sum(consumption)) %&gt;%
+  left_join(rf_data,by=&quot;country&quot;) %&gt;%
+  select(-country) %&gt;%
+  randomForest(co2_emmission  ~., data=., importance=T) %&gt;%
+  importance(type=2) -&gt; rf_importance
+
+data.frame(variable=row.names(rf_importance),
+           importance=rf_importance / sum(rf_importance)) %&gt;%
+  mutate(variable=fct_reorder(variable,IncNodePurity)) %&gt;%
+  ggplot() +
+  geom_col(aes(x=variable,y=IncNodePurity),fill=&quot;#9b0d0d&quot;)+
+  geom_text(aes(x=variable,y=IncNodePurity,
+                label=scales::percent_format(accuracy=1)(IncNodePurity)),
+            hjust=&quot;right&quot;,
+            colour=&quot;white&quot;)+
+  coord_flip() +
+  labs(x=&quot;&quot;,
+       y=&quot;Relative Importance&quot;,
+       title=&quot;Consumption levels are the most important factor in explaing country differences&quot;,
+       caption=&quot;Design @stevejburr - Data source: nu3.de - #tidytuesday&quot;) + theme_minimal(base_family = &quot;Raleway&quot;)+
+  theme(panel.grid=element_blank(),
+        text=element_text(colour=&quot;grey50&quot;),
+        axis.text.x=element_blank(),
+        plot.title=element_text(size=10))</code></pre>
+<p><img src="/post/2020-02-20-tidy-tuesday-18-02-2020_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>That’s the end of this post, it’s been a fun analysis to run on an important topic. I hope you’ve enjoyed reading it.</p>
+<p>If you want to discuss it with me, then use the comments box below or find me on twitter.</p>
+</div>
