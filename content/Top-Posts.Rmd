@@ -1,0 +1,28 @@
+---
+title: My Favourite Blog Posts
+author: ''
+hidedate: true
+date: '\n'
+slug: Top Posts
+categories: []
+tags: []
+disableComments: true
+---
+
+A selection of my favourite blog posts:
+
+*Data and statistics*
+
+- [Good data vs Big Data with Simulation - Nov 2019](/post/good-data-vs-big-data-with-simulation/)
+- [Scatter plots, best fit lines (and regression to the mean) - Mar 2019](/post/scatter-plots-and-best-fit-lines/)
+
+*Visualisation*
+
+- [Replicating Flowingdata Population Charts in R - Oct 2018](/post/replicating-flowingdata-population-charts-in-r/)
+- [The danger of stacked area charts - Sep 2018](/post/stacked-area-charts/)
+
+*Sport related*
+
+- [Unexpected Test Cricket Series Results - Feb 2020](/post/unexpected-test-cricket-results/)
+- [How great is Steve Smith? - Oct 2019 ](/post/how-great-is-steve-smith/)
+- [The best records in sports - May 2019](/post/the-best-records-in-sports/)
