@@ -32,7 +32,8 @@ tags: []
 <div id="building-the-model" class="section level4">
 <h4>Building the model</h4>
 <p>with the points defined, we now have a data set which contains for every race since 1950 a number of points for each driver. Our goal will be to build a model which predicts these points and explains their variation in terms of both car and driver factors. With this model we could then remove the impact of car from the number of points scored by averaging across cars or making predictions for all drivers in the same car.</p>
-<p>As our points are integer counts, we are going to use a Poisson regression model. For each season, we only have limited data points (&lt;25 races) so incorporating “partial pooling” can help us to fit different effects while reducing overfitting. The idea here is that instead of trying to work out how good Ferrari are in 2021 alone we will also consider the range of performances across all teams in all seasons and assume that the distribution of effects across all seasons can help guide our selection for a given team/season combination (McElreath’s Statistical Rethinking book/YouTube lectures are a good source on understanding this).</p>
+<p>As our points are integer counts, we are going to use a Poisson regression model. This is not fully appropriate for the data we have, but for a fun exercise I think it will work well enough. There are two major issues with the model. Firstly, a Poisson variable doesn’t have an upper limit but our points do (11) so if we simulate points using the Poisson distribution and fitted values/predictions from our model we may sometimes get invalid values. Secondly, the model assumes all the rows are independent but this is clearly not the case as there can only be one winner in each race, so again if you simulate from the model you could get odd results. However, I think the model will still do a good job at getting the relative expectations right and splitting these between driver and car.</p>
+<p>For each season, we only have limited data points (&lt;25 races) so incorporating “partial pooling” can help us to fit different effects while reducing overfitting. The idea here is that instead of trying to work out how good Ferrari are in 2021 alone we will also consider the range of performances across all teams in all seasons and assume that the distribution of effects across all seasons can help guide our selection for a given team/season combination (McElreath’s Statistical Rethinking book/YouTube lectures are a good source on understanding this).</p>
 <p>For this reason, we’ll use a “multilevel regression” approach using the <code>brms</code> package - I didn’t spend time thinking deeply about the priors in this model so won’t call this overall analysis strictly Bayesian - as with the rest of the analysis there’s lots of room for investing more time in this part of the analysis.</p>
 <p>With the model type and tool defined we need to specify the structure of the model. I tried a range of models of varying complexity and settled on something in the middle which “felt” right in terms of the results it was producing and conceptually felt sensible (again, no analysis is objective!). This was the following -</p>
 <pre class="r"><code>brm(total_points ~ 1 + 
@@ -55,4 +56,32 @@ tags: []
 </div>
 <div id="results" class="section level4">
 <h4>Results</h4>
+<p>With a fitted model, we can now answer the question of who the best F1 driver in history is (or at least who our model thinks is the best).</p>
+<p>We’ll look at this in two ways, firstly based on peak performance. In the model Driver’s ability can change over time comparing the highest values each driver has taken -</p>
+<div id="peak-performance" class="section level5">
+<h5>Peak Performance</h5>
+</div>
+<div id="career-average-performance" class="section level5">
+<h5>Career Average Performance</h5>
+<p>Next, we can look at career average performance - this is interesting as drivers can fluctuate in performance at different rates, so a driver may have a lower peak but a longer/flatter “ability” curve.</p>
+</div>
+<div id="best-5-year-average-performance" class="section level5">
+<h5>Best 5 year average performance</h5>
+<p>Finally, some drivers have much longer careers than others. As we expect performance to decline over time once the driver is past their peak then averaging across a whole career might unfairly penalise those who had longer careers relative to those who had shorter ones.</p>
+<p>To try and control for that, let’s look at the ranking based on the average performance across the best five years of a drivers career (but we could have picked another number and gotten different results!)</p>
+<p>Even with one model, three (at least) answers to a question, and a huge range of other options!!</p>
+</div>
+</div>
+<div id="additional-analysis" class="section level4">
+<h4>Additional analysis</h4>
+<ul>
+<li>Red Bull overlap crew</li>
+<li>Replay recent seasons with % chances</li>
+<li>Lucky / unlucky drivers and % wins of championship</li>
+<li>Career car contribution</li>
+</ul>
+</div>
+<div id="conclusion" class="section level4">
+<h4>Conclusion</h4>
+<p>No objective analysis, the garden of forking paths</p>
 </div>
