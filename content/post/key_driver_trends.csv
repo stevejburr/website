@@ -1,0 +1,85 @@
+Driver,career_year,Car,year_chr,predicted_points,predicted_points_upr,predicted_points_lwr
+Alain Prost PRO,1,NA,NA,4.91875,12,0
+Alain Prost PRO,2,NA,NA,4.93625,12,1
+Alain Prost PRO,3,NA,NA,4.81225,11,1
+Alain Prost PRO,4,NA,NA,4.91875,12,0
+Alain Prost PRO,5,NA,NA,5.00175,12,1
+Alain Prost PRO,6,NA,NA,5.0705,12,0
+Alain Prost PRO,7,NA,NA,5.24075,12,1
+Alain Prost PRO,8,NA,NA,5.33975,13,1
+Alain Prost PRO,9,NA,NA,5.628,13,1
+Alain Prost PRO,10,NA,NA,5.8955,14,1
+Alain Prost PRO,11,NA,NA,6.1345,14,1
+Alain Prost PRO,12,NA,NA,6.45225,15,1
+Alain Prost PRO,14,NA,NA,7.5645,18,1
+Fernando Alonso ALO,1,NA,NA,2.4025,7,0
+Fernando Alonso ALO,3,NA,NA,3.40475,8,0
+Fernando Alonso ALO,4,NA,NA,4.00425,10,0
+Fernando Alonso ALO,5,NA,NA,4.571,11,0
+Fernando Alonso ALO,6,NA,NA,4.96725,12,0
+Fernando Alonso ALO,7,NA,NA,5.55175,13,1
+Fernando Alonso ALO,8,NA,NA,6.0135,14,1
+Fernando Alonso ALO,9,NA,NA,6.24825,15,1
+Fernando Alonso ALO,10,NA,NA,6.522,15,1
+Fernando Alonso ALO,11,NA,NA,6.5655,15,1
+Fernando Alonso ALO,12,NA,NA,6.5345,15,1
+Fernando Alonso ALO,13,NA,NA,6.34725,15,1
+Fernando Alonso ALO,14,NA,NA,6.0635,14,1
+Fernando Alonso ALO,15,NA,NA,5.70475,13,1
+Fernando Alonso ALO,16,NA,NA,5.245,12,1
+Fernando Alonso ALO,17,NA,NA,4.69575,11,0
+Fernando Alonso ALO,18,NA,NA,4.198,10,0
+Fernando Alonso ALO,21,NA,NA,2.5385,7,0
+Fernando Alonso ALO,22,NA,NA,2.05675,6,0
+Jim Clark CLA,1,NA,NA,3.37975,9,0
+Jim Clark CLA,2,NA,NA,4.38325,11,0
+Jim Clark CLA,3,NA,NA,5.61275,13,1
+Jim Clark CLA,4,NA,NA,6.546,15,1
+Jim Clark CLA,5,NA,NA,7.539,17,1
+Jim Clark CLA,6,NA,NA,8.26025,19,1
+Jim Clark CLA,7,NA,NA,8.56075,19,1
+Jim Clark CLA,8,NA,NA,8.3845,19,1
+Jim Clark CLA,9,NA,NA,8.1265,19,1
+Juan Manuel Fangio FAN,1,NA,NA,2.50625,7,0
+Juan Manuel Fangio FAN,2,NA,NA,3.16225,8,0
+Juan Manuel Fangio FAN,4,NA,NA,4.5835,11,0
+Juan Manuel Fangio FAN,5,NA,NA,5.29,12,1
+Juan Manuel Fangio FAN,6,NA,NA,5.9835,14,1
+Juan Manuel Fangio FAN,7,NA,NA,6.53025,15,1
+Juan Manuel Fangio FAN,8,NA,NA,6.8845,16,1
+Juan Manuel Fangio FAN,9,NA,NA,6.988,16,1
+Lewis Hamilton HAM,1,NA,NA,4.94725,12,0
+Lewis Hamilton HAM,2,NA,NA,4.97075,12,1
+Lewis Hamilton HAM,3,NA,NA,5.0615,12,1
+Lewis Hamilton HAM,4,NA,NA,5.06925,12,1
+Lewis Hamilton HAM,5,NA,NA,5.21225,12,1
+Lewis Hamilton HAM,6,NA,NA,5.223,12,1
+Lewis Hamilton HAM,7,NA,NA,5.19725,12,1
+Lewis Hamilton HAM,8,NA,NA,5.182,12,1
+Lewis Hamilton HAM,9,NA,NA,5.2355,13,1
+Lewis Hamilton HAM,10,NA,NA,5.15775,12,1
+Lewis Hamilton HAM,11,NA,NA,5.182,12,1
+Lewis Hamilton HAM,12,NA,NA,5.15875,12,1
+Lewis Hamilton HAM,13,NA,NA,5.07525,12,1
+Lewis Hamilton HAM,14,NA,NA,5.00575,12,0
+Lewis Hamilton HAM,15,NA,NA,4.8985,12,0
+Lewis Hamilton HAM,16,NA,NA,4.92775,12,0
+Michael Schumacher MSC,1,NA,NA,3.301,8,0
+Michael Schumacher MSC,2,NA,NA,3.643,9,0
+Michael Schumacher MSC,3,NA,NA,3.92925,9,0
+Michael Schumacher MSC,4,NA,NA,4.29125,10,0
+Michael Schumacher MSC,5,NA,NA,4.57175,11,0
+Michael Schumacher MSC,6,NA,NA,4.8085,12,0
+Michael Schumacher MSC,7,NA,NA,5.07825,12,0
+Michael Schumacher MSC,8,NA,NA,5.27675,12.049999999999727,1
+Michael Schumacher MSC,9,NA,NA,5.37375,13,1
+Michael Schumacher MSC,10,NA,NA,5.56075,13,1
+Michael Schumacher MSC,11,NA,NA,5.6035,13,1
+Michael Schumacher MSC,12,NA,NA,5.489,13,1
+Michael Schumacher MSC,13,NA,NA,5.3925,13,1
+Michael Schumacher MSC,14,NA,NA,5.30075,12,0.950000000000017
+Michael Schumacher MSC,15,NA,NA,5.115,12,1
+Michael Schumacher MSC,16,NA,NA,4.8655,11,0
+Michael Schumacher MSC,20,NA,NA,3.64875,9,0
+Michael Schumacher MSC,21,NA,NA,3.30425,8,0
+Michael Schumacher MSC,22,NA,NA,2.90925,8,0
