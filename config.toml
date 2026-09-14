@@ -2,8 +2,6 @@ baseURL = "/"
 languageCode = "en-us"
 title = "Steve Burr"
 theme = "minimal"
-disqusShortname = "stevejburr" # delete this to disable disqus comments
-googleAnalytics = ""
 
 [params]
     author = "Steve Burr"
@@ -47,11 +45,6 @@ googleAnalytics = ""
     weight = 2
 
 [[menu.icon]]
-    url = "https://twitter.com/stevejburr/"
-    name = "twitter"
-    weight = 3
-
-[[menu.icon]]
     url = "https://www.linkedin.com/in/stevejburr/"
     name = "linkedin"
-    weight = 4
+    weight = 3
