@@ -6,7 +6,6 @@ date: '\n'
 slug: Top Posts
 categories: []
 tags: []
-disableComments: true
 ---
 
 A selection of my favourite blog posts:

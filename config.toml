@@ -2,7 +2,6 @@ baseURL = "/"
 languageCode = "en-us"
 title = "Steve Burr"
 theme = "minimal"
-googleAnalytics = ""
 
 [params]
     author = "Steve Burr"
